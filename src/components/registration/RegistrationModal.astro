@@ -355,21 +355,27 @@
       // Call Zoho Payment Handler Edge Function
       try {
         const { supabase } = await import('../../lib/supabase');
-        const isLocal = window.location.hostname === 'localhost' || window.location.hostname.match(/\d+\.\d+\.\d+\.\d+/);
-        let path = window.location.pathname;
-        if (path === '/') path = ''; // Remove trailing slash for root
-        const returnUrl = isLocal 
-          ? `${window.location.origin}${path}?status=success`
-          : `https://www.codekarx.com${path}?status=success`;
-
+        
         const { data, error } = await supabase.functions.invoke('zoho-payment-handler', {
           body: {
             action: 'create-link',
             amount: amount,
             customer_name: registrationData.teamName || registrationData.fullName,
-            order_id: `codekar_${Date.now()}`,
             email: registrationData.email,
-            return_url: returnUrl
+            phone: registrationData.phone,
+            return_url: `${window.location.origin}${window.location.pathname}?status=success`,
+            registration_data: {
+              registration_type: registrationType,
+              college: registrationData.college,
+              department: registrationData.department,
+              year_of_study: parseInt(registrationData.year),
+              track: registrationData.track,
+              project_name: registrationData.projectName,
+              team_name: registrationData.teamName || null,
+              member_2_name: registrationData.members?.[0] || null,
+              member_3_name: registrationData.members?.[1] || null,
+              member_4_name: registrationData.members?.[2] || null,
+            }
           },
         });
 
@@ -423,120 +429,21 @@
     const paymentStatus = urlParams.get('status');
 
     if (paymentStatus === 'success') {
-      // Recover saved registration data
-      const savedData = sessionStorage.getItem('codekar_reg_data');
-      const savedType = sessionStorage.getItem('codekar_reg_type');
+      // Auto-open modal and show success
+      // Note: The actual DB record is updated by the WEBHOOK.
+      // We just show a "Thank you" state here.
+      if (modal) modal.dataset.open = 'true';
+      
+      step1?.classList.remove('active');
+      step2?.classList.remove('active');
+      step3?.classList.remove('active');
+      step5?.classList.add('active');
 
-      if (savedData && savedType) {
-        // Auto-open modal and finalize
-        if (modal) modal.dataset.open = 'true';
-        
-        // Show a processing state
-        step1?.classList.remove('active');
-        step2?.classList.remove('active');
-        step3?.classList.remove('active');
-        step5?.classList.remove('active');
-        
-        // Create a temporary "Finalizing" state using step3
-        if (step3) {
-          step3.classList.add('active');
-          step3.innerHTML = `
-            <div class="payment-card reveal-animation" style="text-align: center; padding: 3rem 2rem;">
-              <div style="font-size: 3rem; margin-bottom: 1rem;">✅</div>
-              <h2>Payment Received!</h2>
-              <p style="color: #64748b; margin: 1rem 0;">Finalizing your registration...</p>
-            </div>
-          `;
-        }
+      const finalCodeDisplay = document.getElementById('final-generated-code');
+      if (finalCodeDisplay) finalCodeDisplay.textContent = "Registration Confirmed";
 
-        const parsedData = JSON.parse(savedData);
-        registrationType = savedType;
-
-        // Finalize DB insert
-        (async () => {
-          try {
-            const { supabase } = await import('../../lib/supabase');
-
-            let uniqueCode = '';
-            const randomStr = () => Math.random().toString(36).substring(2, 7).toUpperCase();
-            let isUnique = false;
-            let attempts = 0;
-
-            while (!isUnique && attempts < 5) {
-              uniqueCode = registrationType === 'team' ? `TEAM-2026-${randomStr()}` : `IND-2026-${randomStr()}`;
-              const { data, error } = await supabase.from('registrations').select('id').eq('generated_code', uniqueCode);
-              if (error) throw error;
-              if (data && data.length === 0) isUnique = true;
-              attempts++;
-            }
-
-            const insertData = {
-              registration_type: registrationType,
-              generated_code: uniqueCode,
-              college: parsedData.college,
-              department: parsedData.department,
-              year_of_study: parseInt(parsedData.year),
-              track: parsedData.track,
-              project_name: parsedData.projectName,
-              full_name: parsedData.fullName,
-              email: parsedData.email,
-              phone: parsedData.phone,
-              team_name: parsedData.teamName || null,
-              team_leader_name: parsedData.fullName,
-              leader_email: parsedData.email,
-              leader_phone: parsedData.phone,
-              member_2_name: parsedData.members?.[0] || null,
-              member_3_name: parsedData.members?.[1] || null,
-              member_4_name: parsedData.members?.[2] || null,
-              transaction_id: `zoho_${Date.now()}`,
-              payer_phone: parsedData.phone,
-              payment_status: 'Paid',
-              amount: registrationType === 'team' ? 999 : 299
-            };
-
-            const { error: insertError } = await supabase.from('registrations').insert([insertData]);
-            if (insertError) throw insertError;
-
-            // Send confirmation email
-            try {
-              supabase.functions.invoke('send-confirmation-email', {
-                body: {
-                  name: parsedData.teamName || parsedData.fullName,
-                  email: parsedData.email,
-                  unique_code: uniqueCode
-                }
-              });
-            } catch (emailErr) {}
-
-            // Clear saved data
-            sessionStorage.removeItem('codekar_reg_data');
-            sessionStorage.removeItem('codekar_reg_type');
-
-            // Clean URL params
-            window.history.replaceState({}, document.title, window.location.pathname);
-
-            // Show success step
-            const finalCodeDisplay = document.getElementById('final-generated-code');
-            if (finalCodeDisplay) finalCodeDisplay.textContent = uniqueCode;
-
-            step3?.classList.remove('active');
-            step5?.classList.add('active');
-
-          } catch (err: any) {
-            console.error('Finalization error:', err);
-            if (step3) {
-              step3.innerHTML = `
-                <div class="payment-card" style="text-align: center; padding: 3rem 2rem;">
-                  <div style="font-size: 3rem; margin-bottom: 1rem;">⚠️</div>
-                  <h2>Registration Error</h2>
-                  <p style="color: #ef4444; margin: 1rem 0;">${err.message || 'Failed to save registration. Please contact support.'}</p>
-                  <p style="color: #64748b;">Your payment was successful. Please contact the organizers with your email for assistance.</p>
-                </div>
-              `;
-            }
-          }
-        })();
-      }
+      // Clean URL params
+      window.history.replaceState({}, document.title, window.location.pathname);
     }
 
     // Invoice Generation
