@@ -356,9 +356,11 @@
       try {
         const { supabase } = await import('../../lib/supabase');
         const isLocal = window.location.hostname === 'localhost' || window.location.hostname.match(/\d+\.\d+\.\d+\.\d+/);
+        let path = window.location.pathname;
+        if (path === '/') path = ''; // Remove trailing slash for root
         const returnUrl = isLocal 
-          ? `${window.location.origin}${window.location.pathname}?status=success`
-          : `https://www.codekarx.com${window.location.pathname}?status=success`;
+          ? `${window.location.origin}${path}?status=success`
+          : `https://www.codekarx.com${path}?status=success`;
 
         const { data, error } = await supabase.functions.invoke('zoho-payment-handler', {
           body: {

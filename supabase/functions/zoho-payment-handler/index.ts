@@ -177,6 +177,7 @@ serve(async (req: Request) => {
             ];
 
             let finalResult: any = null;
+            let failureLogs: string[] = [];
 
             for (const service of services) {
                 for (const domain of domains) {
@@ -187,6 +188,8 @@ serve(async (req: Request) => {
                             if (result) {
                                 finalResult = result;
                                 break;
+                            } else {
+                                failureLogs.push(`[${service.toUpperCase()}][${domain}][${s.h}] failed`);
                             }
                         }
                         if (finalResult) break;
@@ -198,12 +201,13 @@ serve(async (req: Request) => {
 
             if (!finalResult) {
                 return new Response(JSON.stringify({
-                    error: 'All Zoho authentication strategies failed.',
-                    details: 'This usually means your Client ID, Secret, or Refresh Token are invalid for the .in or .com domains. Check Supabase Edge logs for the specific error from Zoho.',
-                    hint: 'Run the secrets command again with correct values and re-deploy.'
+                    error: 'Zoho API Rejection',
+                    details: 'Check Supabase Edge logs for the specific error from Zoho (e.g. invalid_return_url).',
+                    strategies_tried: failureLogs,
+                    hint: 'Your return_url MUST match your Zoho app settings EXACTLY (e.g. no trailing slashes if none are in settings).'
                 }), {
                     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-                    status: 401
+                    status: 400
                 });
             }
 
