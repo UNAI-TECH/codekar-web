@@ -124,60 +124,21 @@
         </form>
       </div>
 
-      <!-- Step 3: QR Code Reveal -->
+      <!-- Step 3: Redirecting to Payment -->
       <div id="step-3" class="step">
-        <div class="payment-card reveal-animation">
-          <div class="timer-badge">⌛ <span id="payment-timer">05:00</span></div>
-          <h2>Scan the QR to Complete Your Payment</h2>
-          
-          <div class="qr-container">
-            <img id="qr-image" src="" alt="Payment QR Code">
-          </div>
-          
-          <div class="payment-details">
-            <p class="amount-display">Amount: <span id="display-payment-amount">₹299</span></p>
-            <p class="payment-instructions">Pay using any UPI app (GPay, PhonePe, Paytm). Take a screenshot after payment.</p>
-          </div>
-
-          <div id="timer-expired-msg" class="error-msg" style="display: none;">
-            <p>Payment session expired. Please retry.</p>
+        <div class="payment-card reveal-animation" style="text-align: center; padding: 3rem 2rem;">
+          <div style="font-size: 3rem; margin-bottom: 1rem;">🔄</div>
+          <h2>Redirecting to Payment...</h2>
+          <p style="color: #64748b; margin: 1rem 0;">You will be redirected to the secure Zoho payment page. Please complete your payment there.</p>
+          <p class="amount-display">Amount: <span id="display-payment-amount">₹299</span></p>
+          <div id="payment-error-msg" class="error-msg" style="display: none;">
+            <p id="payment-error-text">Something went wrong.</p>
             <button type="button" class="retry-btn" id="retry-payment-btn">Retry Payment</button>
           </div>
-          
-          <div class="actions">
-            <button type="button" class="cancel-btn" id="cancel-payment-btn">Cancel Payment</button>
-            <button type="button" class="submit-btn" id="ive-paid-btn">I've Paid</button>
+          <div class="actions" style="justify-content: center;">
+            <button type="button" class="cancel-btn" id="cancel-payment-btn">Cancel</button>
           </div>
         </div>
-      </div>
-
-      <!-- Step 4: Payment Confirmation Form -->
-      <div id="step-4" class="step">
-        <h2>Payment Confirmation</h2>
-        <p style="color: #64748b; margin-bottom: 1.5rem;">Enter transaction details to complete registration.</p>
-        <form id="payment-confirm-form">
-          <div class="form-grid">
-            <div class="field full-width">
-              <label for="transaction-id">Transaction ID (Required)</label>
-              <input type="text" id="transaction-id" required>
-            </div>
-            
-            <div class="field full-width">
-              <label for="confirm-team-name">Team Name (Required)</label>
-              <input type="text" id="confirm-team-name" required>
-            </div>
-
-            <div class="field full-width">
-              <label for="payer-phone">Phone Number of Payer (Required)</label>
-              <input type="tel" id="payer-phone" required pattern="[0-9]{10}">
-            </div>
-          </div>
-          
-          <div class="actions" style="margin-top: 2rem;">
-            <button type="button" class="back-btn" id="back-to-qr-btn">Back</button>
-            <button type="submit" class="submit-btn" id="complete-reg-btn" disabled>Complete Registration</button>
-          </div>
-        </form>
       </div>
 
       <!-- Step 5: Success & Invoice & WhatsApp Join -->
@@ -233,31 +194,19 @@
     const step1 = document.getElementById('step-1');
     const step2 = document.getElementById('step-2');
     const step3 = document.getElementById('step-3');
-    const step4 = document.getElementById('step-4');
     const step5 = document.getElementById('step-5');
     const backBtn = document.querySelector('.back-btn');
     const form = document.getElementById('reg-form');
-    const paymentForm = document.getElementById('payment-confirm-form') as HTMLFormElement;
     const teamNameField = document.getElementById('team-name-field');
     const formTitle = document.getElementById('form-title');
     const tabBtns = document.querySelectorAll('.tab-btn');
     const tabContents = document.querySelectorAll('.tab-content');
 
-    // Payment Workflow Elements
-    const qrImage = document.getElementById('qr-image') as HTMLImageElement;
-    const paymentTimerDisplay = document.getElementById('payment-timer');
+    // Payment Display Elements
     const displayAmount = document.getElementById('display-payment-amount');
-    const timerExpiredMsg = document.getElementById('timer-expired-msg');
-    const ivePaidBtn = document.getElementById('ive-paid-btn');
-    const cancelPaymentBtn = document.getElementById('cancel-payment-btn');
-    const retryPaymentBtn = document.getElementById('retry-payment-btn');
-    const backToQrBtn = document.getElementById('back-to-qr-btn');
-    const completeRegBtn = document.getElementById('complete-reg-btn') as HTMLButtonElement;
     const downloadInvoiceBtn = document.getElementById('download-invoice-btn');
 
     let registrationType = 'individual';
-    let paymentTimer: any = null;
-    let timeLeft = 300; // 5 minutes
     let registrationData: any = {};
 
     // Handle scroll locking with Lenis
@@ -274,7 +223,6 @@
             } else {
               document.body.classList.remove('scroll-locked');
               if ((window as any).lenis) (window as any).lenis.start();
-              stopTimer();
             }
           }
         });
@@ -365,10 +313,16 @@
       step1?.classList.add('active');
     });
 
-    // Step 2: Proceed to Payment
-    form?.addEventListener('submit', (e) => {
+    // Step 2: Proceed to Payment (Zoho Payment Link)
+    form?.addEventListener('submit', async (e) => {
       e.preventDefault();
       
+      const submitBtn = form?.querySelector('.submit-btn') as HTMLButtonElement;
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Processing...';
+      }
+
       // Store current form data
       registrationData = {
         fullName: (document.getElementById('full-name') as HTMLInputElement).value,
@@ -387,168 +341,198 @@
         ]
       };
 
-      // Set Amount and QR based on Type
-      const amount = registrationType === 'team' ? '999' : '299';
+      // Save data to sessionStorage so it persists after Zoho redirect
+      sessionStorage.setItem('codekar_reg_data', JSON.stringify(registrationData));
+      sessionStorage.setItem('codekar_reg_type', registrationType);
+
+      const amount = registrationType === 'team' ? 999 : 299;
       if (displayAmount) displayAmount.textContent = `₹${amount}`;
-      if (qrImage) qrImage.src = `/${amount}.jpeg`;
-      
-      // Also pre-fill step 4 team name
-      const confirmTeamName = document.getElementById('confirm-team-name') as HTMLInputElement;
-      if (confirmTeamName) confirmTeamName.value = registrationData.teamName || registrationData.fullName;
 
-      // Transition to Payment QR Step
-      startPaymentFlow();
-    });
-
-    function startPaymentFlow() {
+      // Show loading step
       step2?.classList.remove('active');
       step3?.classList.add('active');
-      startTimer();
-    }
 
-    function startTimer() {
-      stopTimer();
-      timeLeft = 300;
-      updateTimerDisplay();
-      if(timerExpiredMsg) timerExpiredMsg.style.display = 'none';
-      if(ivePaidBtn) (ivePaidBtn as HTMLButtonElement).disabled = false;
-      
-      paymentTimer = setInterval(() => {
-        timeLeft--;
-        updateTimerDisplay();
-        if (timeLeft <= 0) {
-          expireTimer();
-        }
-      }, 1000);
-    }
-
-    function stopTimer() {
-      if (paymentTimer) clearInterval(paymentTimer);
-      paymentTimer = null;
-    }
-
-    function updateTimerDisplay() {
-      const minutes = Math.floor(timeLeft / 60);
-      const seconds = timeLeft % 60;
-      if (paymentTimerDisplay) {
-        paymentTimerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-      }
-    }
-
-    function expireTimer() {
-      stopTimer();
-      if (timerExpiredMsg) timerExpiredMsg.style.display = 'block';
-      if (ivePaidBtn) (ivePaidBtn as HTMLButtonElement).disabled = true;
-      if (completeRegBtn) completeRegBtn.disabled = true;
-    }
-
-    // Step 3 Actions
-    retryPaymentBtn?.addEventListener('click', startTimer);
-    cancelPaymentBtn?.addEventListener('click', () => {
-      stopTimer();
-      step3?.classList.remove('active');
-      step2?.classList.add('active');
-    });
-
-    ivePaidBtn?.addEventListener('click', () => {
-      step3?.classList.remove('active');
-      step4?.classList.add('active');
-    });
-
-    // Step 4 Actions
-    backToQrBtn?.addEventListener('click', () => {
-      step4?.classList.remove('active');
-      step3?.classList.add('active');
-    });
-
-    // Form Validation for Step 4
-    const validatePaymentForm = () => {
-      const txId = (document.getElementById('transaction-id') as HTMLInputElement).value.trim();
-      const teamName = (document.getElementById('confirm-team-name') as HTMLInputElement).value.trim();
-      const phone = (document.getElementById('payer-phone') as HTMLInputElement).value.trim();
-      const isValid = txId !== '' && teamName !== '' && /^[0-9]{10}$/.test(phone) && timeLeft > 0;
-      if (completeRegBtn) completeRegBtn.disabled = !isValid;
-    };
-
-    paymentForm?.addEventListener('input', validatePaymentForm);
-
-    paymentForm?.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      if (completeRegBtn) {
-        completeRegBtn.disabled = true;
-        completeRegBtn.textContent = 'Verifying...';
-      }
-
+      // Call Zoho Payment Handler Edge Function
       try {
         const { supabase } = await import('../../lib/supabase');
-        
-        let uniqueCode = '';
-        const randomStr = () => Math.random().toString(36).substring(2, 7).toUpperCase();
-        let isUnique = false;
-        let attempts = 0;
-        
-        while(!isUnique && attempts < 5) {
-          uniqueCode = registrationType === 'team' ? `TEAM-2026-${randomStr()}` : `IND-2026-${randomStr()}`;
-          const { data, error } = await supabase.from('registrations').select('id').eq('generated_code', uniqueCode);
-          if (error) throw error;
-          if (data && data.length === 0) isUnique = true;
-          attempts++;
+        const returnUrl = `${window.location.origin}${window.location.pathname}?status=success`;
+
+        const { data, error } = await supabase.functions.invoke('zoho-payment-handler', {
+          body: {
+            action: 'create-link',
+            amount: amount,
+            customer_name: registrationData.teamName || registrationData.fullName,
+            order_id: `codekar_${Date.now()}`,
+            email: registrationData.email,
+            return_url: returnUrl
+          },
+        });
+
+        if (error || !data?.payment_url) {
+          console.error('Payment link error:', { error, data });
+          throw new Error(data?.error || error?.message || 'Failed to create payment link');
         }
 
-        const insertData = {
-          registration_type: registrationType,
-          generated_code: uniqueCode,
-          college: registrationData.college,
-          department: registrationData.department,
-          year_of_study: parseInt(registrationData.year),
-          track: registrationData.track,
-          project_name: registrationData.projectName,
-          full_name: registrationData.fullName,
-          email: registrationData.email,
-          phone: registrationData.phone,
-          team_name: registrationData.teamName || null,
-          team_leader_name: registrationData.fullName,
-          leader_email: registrationData.email,
-          leader_phone: registrationData.phone,
-          member_2_name: registrationData.members[0] || null,
-          member_3_name: registrationData.members[1] || null,
-          member_4_name: registrationData.members[2] || null,
-          transaction_id: (document.getElementById('transaction-id') as HTMLInputElement).value.trim(),
-          payer_phone: (document.getElementById('payer-phone') as HTMLInputElement).value.trim(),
-          payment_status: 'Paid',
-          amount: registrationType === 'team' ? 999 : 299
-        };
-
-        const { error: insertError } = await supabase.from('registrations').insert([insertData]);
-        if (insertError) throw insertError;
-
-        // Trigger Confirmation Email
-        try {
-          supabase.functions.invoke('send-confirmation-email', {
-            body: {
-              name: registrationData.teamName || registrationData.fullName,
-              email: registrationData.email,
-              unique_code: uniqueCode
-            }
-          });
-        } catch (emailErr) {}
-
-        // Success transition
-        stopTimer();
-        const finalCodeDisplay = document.getElementById('final-generated-code');
-        if (finalCodeDisplay) finalCodeDisplay.textContent = uniqueCode;
-        
-        step4?.classList.remove('active');
-        step5?.classList.add('active');
+        // Redirect to Zoho payment page
+        window.location.href = data.payment_url;
 
       } catch (err: any) {
-        alert(`Registration failed: ${err.message || 'Unexpected error'}. Please try again.`);
-        if (completeRegBtn) {
-          completeRegBtn.disabled = false;
-          completeRegBtn.textContent = 'Complete Registration';
+        console.error('Payment flow error:', err);
+        const errorMsg = document.getElementById('payment-error-msg');
+        const errorText = document.getElementById('payment-error-text');
+        if (errorMsg) errorMsg.style.display = 'block';
+        if (errorText) errorText.textContent = err.message || 'Failed to create payment link. Please try again.';
+        
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Proceed to Payment';
         }
       }
     });
+
+    // Cancel payment redirect
+    const cancelPaymentBtn = document.getElementById('cancel-payment-btn');
+    const retryPaymentBtn = document.getElementById('retry-payment-btn');
+    
+    cancelPaymentBtn?.addEventListener('click', () => {
+      step3?.classList.remove('active');
+      step2?.classList.add('active');
+      const submitBtn = form?.querySelector('.submit-btn') as HTMLButtonElement;
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Proceed to Payment';
+      }
+    });
+
+    retryPaymentBtn?.addEventListener('click', () => {
+      const errorMsg = document.getElementById('payment-error-msg');
+      if (errorMsg) errorMsg.style.display = 'none';
+      // Re-submit the form
+      form?.dispatchEvent(new Event('submit'));
+    });
+
+    // ============================================
+    // HANDLE RETURN FROM ZOHO PAYMENT
+    // ============================================
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentStatus = urlParams.get('status');
+
+    if (paymentStatus === 'success') {
+      // Recover saved registration data
+      const savedData = sessionStorage.getItem('codekar_reg_data');
+      const savedType = sessionStorage.getItem('codekar_reg_type');
+
+      if (savedData && savedType) {
+        // Auto-open modal and finalize
+        if (modal) modal.dataset.open = 'true';
+        
+        // Show a processing state
+        step1?.classList.remove('active');
+        step2?.classList.remove('active');
+        step3?.classList.remove('active');
+        step5?.classList.remove('active');
+        
+        // Create a temporary "Finalizing" state using step3
+        if (step3) {
+          step3.classList.add('active');
+          step3.innerHTML = `
+            <div class="payment-card reveal-animation" style="text-align: center; padding: 3rem 2rem;">
+              <div style="font-size: 3rem; margin-bottom: 1rem;">✅</div>
+              <h2>Payment Received!</h2>
+              <p style="color: #64748b; margin: 1rem 0;">Finalizing your registration...</p>
+            </div>
+          `;
+        }
+
+        const parsedData = JSON.parse(savedData);
+        registrationType = savedType;
+
+        // Finalize DB insert
+        (async () => {
+          try {
+            const { supabase } = await import('../../lib/supabase');
+
+            let uniqueCode = '';
+            const randomStr = () => Math.random().toString(36).substring(2, 7).toUpperCase();
+            let isUnique = false;
+            let attempts = 0;
+
+            while (!isUnique && attempts < 5) {
+              uniqueCode = registrationType === 'team' ? `TEAM-2026-${randomStr()}` : `IND-2026-${randomStr()}`;
+              const { data, error } = await supabase.from('registrations').select('id').eq('generated_code', uniqueCode);
+              if (error) throw error;
+              if (data && data.length === 0) isUnique = true;
+              attempts++;
+            }
+
+            const insertData = {
+              registration_type: registrationType,
+              generated_code: uniqueCode,
+              college: parsedData.college,
+              department: parsedData.department,
+              year_of_study: parseInt(parsedData.year),
+              track: parsedData.track,
+              project_name: parsedData.projectName,
+              full_name: parsedData.fullName,
+              email: parsedData.email,
+              phone: parsedData.phone,
+              team_name: parsedData.teamName || null,
+              team_leader_name: parsedData.fullName,
+              leader_email: parsedData.email,
+              leader_phone: parsedData.phone,
+              member_2_name: parsedData.members?.[0] || null,
+              member_3_name: parsedData.members?.[1] || null,
+              member_4_name: parsedData.members?.[2] || null,
+              transaction_id: `zoho_${Date.now()}`,
+              payer_phone: parsedData.phone,
+              payment_status: 'Paid',
+              amount: registrationType === 'team' ? 999 : 299
+            };
+
+            const { error: insertError } = await supabase.from('registrations').insert([insertData]);
+            if (insertError) throw insertError;
+
+            // Send confirmation email
+            try {
+              supabase.functions.invoke('send-confirmation-email', {
+                body: {
+                  name: parsedData.teamName || parsedData.fullName,
+                  email: parsedData.email,
+                  unique_code: uniqueCode
+                }
+              });
+            } catch (emailErr) {}
+
+            // Clear saved data
+            sessionStorage.removeItem('codekar_reg_data');
+            sessionStorage.removeItem('codekar_reg_type');
+
+            // Clean URL params
+            window.history.replaceState({}, document.title, window.location.pathname);
+
+            // Show success step
+            const finalCodeDisplay = document.getElementById('final-generated-code');
+            if (finalCodeDisplay) finalCodeDisplay.textContent = uniqueCode;
+
+            step3?.classList.remove('active');
+            step5?.classList.add('active');
+
+          } catch (err: any) {
+            console.error('Finalization error:', err);
+            if (step3) {
+              step3.innerHTML = `
+                <div class="payment-card" style="text-align: center; padding: 3rem 2rem;">
+                  <div style="font-size: 3rem; margin-bottom: 1rem;">⚠️</div>
+                  <h2>Registration Error</h2>
+                  <p style="color: #ef4444; margin: 1rem 0;">${err.message || 'Failed to save registration. Please contact support.'}</p>
+                  <p style="color: #64748b;">Your payment was successful. Please contact the organizers with your email for assistance.</p>
+                </div>
+              `;
+            }
+          }
+        })();
+      }
+    }
 
     // Invoice Generation
     downloadInvoiceBtn?.addEventListener('click', async () => {
@@ -592,8 +576,8 @@
       doc.text(`Registration Type: ${registrationType.charAt(0).toUpperCase() + registrationType.slice(1)}`, 20, 95);
       doc.text(`Team Name: ${registrationData.teamName || registrationData.fullName}`, 20, 102);
       doc.text(`Amount Paid: ₹${registrationType === 'team' ? '999' : '299'}`, 20, 109);
-      doc.text(`Transaction ID: ${(document.getElementById('transaction-id') as HTMLInputElement).value}`, 20, 116);
-      doc.text(`Payer Phone: ${(document.getElementById('payer-phone') as HTMLInputElement).value}`, 20, 123);
+      doc.text(`Transaction: Zoho Payment`, 20, 116);
+      doc.text(`Email: ${registrationData.email || 'N/A'}`, 20, 123);
       doc.text(`Participant Code: ${document.getElementById('final-generated-code')?.textContent || 'N/A'}`, 20, 130);
 
       // Footer
@@ -608,11 +592,9 @@
     });
 
     function resetForm() {
-      stopTimer();
       step1?.classList.add('active');
       step2?.classList.remove('active');
       step3?.classList.remove('active');
-      step4?.classList.remove('active');
       step5?.classList.remove('active');
       
       const formElements = form?.elements;
@@ -630,11 +612,6 @@
       
       // @ts-ignore
       form?.reset();
-      paymentForm?.reset();
-      if(completeRegBtn) {
-        completeRegBtn.disabled = true;
-        completeRegBtn.textContent = 'Complete Registration';
-      }
     }
   });
 
