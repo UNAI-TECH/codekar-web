@@ -114,7 +114,7 @@ serve(async (req: Request) => {
                         email: email || 'participant@codekar.in',
                     };
                 } else {
-                    let sanitizedReturnUrl = return_url || req.headers.get('origin') || 'https://codekar.in';
+                    let sanitizedReturnUrl = return_url || req.headers.get('origin') || 'https://www.codekarx.com';
 
                     // Zoho Payments REQUIRES HTTPS and a real domain for return_url.
                     // Local IPs (192.168.x.x) or http://localhost will trigger an error.
@@ -133,6 +133,9 @@ serve(async (req: Request) => {
                         description: `Codekar Registration - ${customer_name || 'Participant'}`
                     };
                 }
+
+                console.log(`[ZOHO] Attempting ${service} request to ${domain} with return_url: ${p.return_url || 'N/A'}`);
+                console.log(`[ZOHO] Payload:`, JSON.stringify(p));
 
                 try {
                     const res = await fetch(baseUrl, {

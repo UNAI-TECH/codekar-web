@@ -355,7 +355,10 @@
       // Call Zoho Payment Handler Edge Function
       try {
         const { supabase } = await import('../../lib/supabase');
-        const returnUrl = `${window.location.origin}${window.location.pathname}?status=success`;
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname.match(/\d+\.\d+\.\d+\.\d+/);
+        const returnUrl = isLocal 
+          ? `${window.location.origin}${window.location.pathname}?status=success`
+          : `https://www.codekarx.com${window.location.pathname}?status=success`;
 
         const { data, error } = await supabase.functions.invoke('zoho-payment-handler', {
           body: {
