@@ -24,7 +24,11 @@ const { hideCTA = false } = Astro.props;
         <li><a href="/#faq" class="nav-link">FAQ</a></li>
       </ul>
     </nav>
-    {!hideCTA && <button id="apply-btn" class="cta-button">Apply Now</button>}
+    {!hideCTA && (
+      <div class="cta-wrapper">
+        <button id="apply-btn" class="cta-button">Apply Now</button>
+      </div>
+    )}
   </div>
   <!-- Mobile backdrop overlay -->
   <div id="nav-backdrop" class="nav-backdrop"></div>
@@ -407,6 +411,13 @@ const { hideCTA = false } = Astro.props;
       flex: 1;
       display: flex;
       justify-content: flex-start;
+      margin-right: 0;
+    }
+
+    .cta-wrapper {
+      flex: 1;
+      display: flex;
+      justify-content: flex-end;
     }
 
     nav {
@@ -426,6 +437,9 @@ const { hideCTA = false } = Astro.props;
       order: 2; /* Nav in middle on desktop */
       visibility: visible;
       pointer-events: auto;
+      flex: 0 1 auto; /* Don't grow, can shrink, basis auto */
+      display: flex;
+      justify-content: center;
     }
 
     nav ul {
@@ -455,10 +469,7 @@ const { hideCTA = false } = Astro.props;
     .cta-button {
       font-size: 1rem;
       padding: 0.6rem 1.5rem;
-      order: 3; /* Apply button on right on desktop */
-      flex: 1;
-      max-width: fit-content;
-      margin-left: auto;
+      /* order removed as wrapper handles it */
     }
   }
 
