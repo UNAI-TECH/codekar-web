@@ -403,6 +403,12 @@ const { hideCTA = false } = Astro.props;
       display: none !important;
     }
 
+    .logo {
+      flex: 1;
+      display: flex;
+      justify-content: flex-start;
+    }
+
     nav {
       position: relative;
       top: auto;
@@ -450,6 +456,9 @@ const { hideCTA = false } = Astro.props;
       font-size: 1rem;
       padding: 0.6rem 1.5rem;
       order: 3; /* Apply button on right on desktop */
+      flex: 1;
+      max-width: fit-content;
+      margin-left: auto;
     }
   }
 
