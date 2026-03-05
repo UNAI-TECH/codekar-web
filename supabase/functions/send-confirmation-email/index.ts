@@ -1,12 +1,15 @@
+// @ts-nocheck
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
-serve(async (req) => {
+serve(async (req: Request) => {
     // CORS HEADERS (Must return these on OPTIONS request)
     if (req.method === 'OPTIONS') {
-        return new Response('ok', {
+        return new Response(null, {
+            status: 200,
             headers: {
                 'Access-Control-Allow-Origin': '*',
                 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+                'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
             }
         })
     }

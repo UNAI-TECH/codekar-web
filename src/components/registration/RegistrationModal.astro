@@ -397,8 +397,8 @@ const INDIVIDUAL_AMOUNT = import.meta.env.INDIVIDUAL_REGISTRATION_AMOUNT || 299;
       showPaymentGenerating();
 
       try {
-        // Call zoho-payment edge function
-        const response = await fetch(`${SUPABASE_URL}/functions/v1/zoho-payment`, {
+        // Call zoho-payment-handler edge function
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/zoho-payment-handler`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

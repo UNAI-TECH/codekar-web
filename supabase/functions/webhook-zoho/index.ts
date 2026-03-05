@@ -8,7 +8,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
     "Access-Control-Max-Age": "86400",
 };
 
@@ -73,7 +73,7 @@ async function verifyWebhookSignature(
 // ── Main Handler ───────────────────────────────────────────────────────────────
 serve(async (req: Request) => {
     if (req.method === "OPTIONS") {
-        return new Response("ok", { status: 200, headers: corsHeaders });
+        return new Response(null, { status: 200, headers: corsHeaders });
     }
 
     // Always return 200 to Zoho (to prevent retry storm on any error)
