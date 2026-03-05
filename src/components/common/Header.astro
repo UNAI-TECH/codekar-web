@@ -4,7 +4,9 @@ const { hideCTA = false } = Astro.props;
 <header id="main-header">
   <div class="container header-content">
     <div class="logo">
-      <a href="/">CODEKARX</a>
+      <a href="/">
+        <img src="/codekarX.png" alt="CODEKARX" class="logo-img" />
+      </a>
     </div>
     
     <!-- Hamburger Button (mobile only) -->
@@ -234,14 +236,22 @@ const { hideCTA = false } = Astro.props;
   }
 
   .logo a {
-    font-size: clamp(1.2rem, 4vw, 1.5rem);
-    font-weight: 800;
-    letter-spacing: -0.05em;
-    background: linear-gradient(135deg, var(--color-s-primary), var(--color-s-primary-dark));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    display: flex;
+    align-items: center;
     cursor: pointer;
-    white-space: nowrap;
+  }
+
+  .logo-img {
+    height: clamp(2.5rem, 8vw, 3.5rem);
+    width: auto;
+    object-fit: contain;
+    transition: transform 0.3s ease, filter 0.3s ease;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+  }
+
+  .logo:hover .logo-img {
+    transform: scale(1.05);
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15));
   }
 
   /* ===== Hamburger Button (Mobile Default) ===== */

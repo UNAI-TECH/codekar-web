@@ -21,17 +21,17 @@ function getSupabaseAdmin() {
 // Priority 1: 1003.xxx API key → use directly as Zoho-encapikey
 // Priority 2: 1003.xxx refresh token → use as static key
 // Priority 3: Standard OAuth refresh
-async function resolveZohoToken(): Promise<{ token: string; headerPrefix: string }> {
+async function resolveZohoToken(): Promise<{ token: string; headerPrefix: string; domain: string }> {
     const paymentsApiKey = Deno.env.get("ZOHO_PAYMENTS_API_KEY");
     const refreshToken = Deno.env.get("ZOHO_REFRESH_TOKEN");
     const clientId = Deno.env.get("ZOHO_CLIENT_ID");
     const clientSecret = Deno.env.get("ZOHO_CLIENT_SECRET");
 
     if (paymentsApiKey && (paymentsApiKey.startsWith("1003.") || paymentsApiKey.startsWith("1002."))) {
-        return { token: paymentsApiKey, headerPrefix: "Zoho-encapikey" };
+        return { token: paymentsApiKey, headerPrefix: "Zoho-encapikey", domain: "in" };
     }
     if (refreshToken && (refreshToken.startsWith("1003.") || refreshToken.startsWith("1002."))) {
-        return { token: refreshToken, headerPrefix: "Zoho-encapikey" };
+        return { token: refreshToken, headerPrefix: "Zoho-encapikey", domain: "in" };
     }
     if (clientId && clientSecret && refreshToken) {
         for (const domain of ["in", "com"]) {
@@ -44,9 +44,13 @@ async function resolveZohoToken(): Promise<{ token: string; headerPrefix: string
                 const res = await fetch(tokenUrl.toString(), { method: "POST" });
                 const data = await res.json();
                 if (res.ok && data.access_token) {
-                    return { token: data.access_token, headerPrefix: "Zoho-oauthtoken" };
+                    console.log(`[AUTH] Successfully obtained access token from domain: ${domain}`);
+                    return { token: data.access_token, headerPrefix: "Zoho-oauthtoken", domain };
                 }
-            } catch (e) { }
+                console.warn(`[AUTH] Domain ${domain} refresh failed:`, JSON.stringify(data));
+            } catch (e) {
+                console.error(`[AUTH] OAuth refresh exception for domain ${domain}:`, e.message);
+            }
         }
     }
     throw new Error("No valid Zoho auth token. Set ZOHO_PAYMENTS_API_KEY in Supabase secrets.");
@@ -57,10 +61,11 @@ async function checkZohoSessionStatus(sessionId: string): Promise<{
     status: "paid" | "pending" | "failed";
     zoho_payment_id?: string;
 }> {
-    const { token, headerPrefix } = await resolveZohoToken();
+    const { token, headerPrefix, domain } = await resolveZohoToken();
     const accountId = Deno.env.get("ZOHO_PAYMENTS_ACCOUNT_ID");
+    console.log(`[VERIFY][SESSION] Checking status for ${sessionId} using Account ID: ${accountId} on domain: ${domain}`);
 
-    const apiUrl = `https://payments.zoho.in/api/v1/paymentsessions/${sessionId}?account_id=${accountId}`;
+    const apiUrl = `https://payments.zoho.${domain}/api/v1/paymentsessions/${sessionId}?account_id=${accountId}`;
 
     const res = await fetch(apiUrl, {
         headers: {
@@ -69,9 +74,11 @@ async function checkZohoSessionStatus(sessionId: string): Promise<{
         },
     });
 
-    if (!res.ok) return { status: "pending" };
-
     const data = await res.json();
+    if (!res.ok) {
+        console.warn(`[VERIFY][SESSION][ERROR] Status ${res.status}:`, JSON.stringify(data));
+        return { status: "pending" };
+    }
     const sessionData = data.payments_session || data;
     const sessionStatus = (sessionData.status || "").toLowerCase();
 
@@ -91,7 +98,7 @@ async function checkZohoPaymentLinkStatus(payment_link_id: string): Promise<{
     status: "paid" | "pending" | "failed" | "cancelled" | "expired";
     zoho_payment_id?: string;
 }> {
-    const { token, headerPrefix } = await resolveZohoToken();
+    const { token, headerPrefix, domain } = await resolveZohoToken();
     const accountId = Deno.env.get("ZOHO_PAYMENTS_ACCOUNT_ID");
 
     if (!accountId) {
@@ -99,7 +106,7 @@ async function checkZohoPaymentLinkStatus(payment_link_id: string): Promise<{
     }
 
     // Get payment link details from Zoho
-    const apiUrl = `https://payments.zoho.in/api/v1/paymentlinks/${payment_link_id}?account_id=${accountId}`;
+    const apiUrl = `https://payments.zoho.${domain}/api/v1/paymentlinks/${payment_link_id}?account_id=${accountId}`;
 
     const res = await fetch(apiUrl, {
         headers: {

@@ -5,7 +5,7 @@ const year = new Date().getFullYear();
   <div class="container footer-content">
     <!-- Brand Column -->
     <div class="footer-brand">
-      <h3>UNAI</h3>
+      <img src="/Untitled design (6).png" alt="UNAI" class="footer-logo" />
       <p>Join India's premier student hackathon and build solutions that matter. 48 hours of innovation.</p>
       <div class="social-links">
         <a href="https://www.instagram.com/unai.tech?igsh=YmwwMTk1cW1xeHl0" target="_blank" rel="noopener noreferrer" aria-label="Instagram" class="social-icon">
@@ -96,14 +96,17 @@ const year = new Date().getFullYear();
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   }
 
-  .footer-brand h3 {
-    font-size: 1.5rem;
-    font-weight: 800;
-    color: white;
-    margin-bottom: 0.75rem;
-    background: linear-gradient(135deg, var(--color-s-primary), var(--color-s-accent));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+  .footer-logo {
+    height: clamp(5rem, 0.5vw, 1rem);
+    width: auto;
+    object-fit: contain;
+    margin-bottom: 1rem;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+    transition: transform 0.3s ease;
+  }
+
+  .footer-logo:hover {
+    transform: scale(1.05);
   }
 
   .footer-brand p {

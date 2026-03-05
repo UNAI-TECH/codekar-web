@@ -8,6 +8,7 @@ import Sponsors from '../components/home/Sponsors.astro';
 import FAQ from '../components/home/FAQ.astro';
 import AboutParallax from '../components/home/AboutParallax.astro';
 import CoPresented from '../components/home/CoPresented.astro';
+import TrackModal from '../components/home/TrackModal.astro';
 
 ---
 
@@ -25,6 +26,9 @@ import CoPresented from '../components/home/CoPresented.astro';
 
 		<FAQ />
 	</div>
+
+	<!-- Track Modal moved here to escape z-index stacking context of #content -->
+	<TrackModal />
 </Layout>
 
 <style>

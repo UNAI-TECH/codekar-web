@@ -10,31 +10,41 @@ const corsHeaders = {
 };
 
 /**
- * Resolves Zoho access token with multi-domain check and API key fallback
+ * Resolves Zoho access token with multi-domain check and region detection
  */
-async function getZohoAccessToken() {
-    const clientId = Deno.env.get('ZOHO_CLIENT_ID');
-    const clientSecret = Deno.env.get('ZOHO_CLIENT_SECRET');
-    const refreshToken = Deno.env.get('ZOHO_REFRESH_TOKEN');
-    const backupApiKey = Deno.env.get('ZOHO_PAYMENTS_API_KEY');
+async function getZohoAccessToken(): Promise<{ token: string; prefix: string; domain: string }> {
+    const apiKey = Deno.env.get("ZOHO_PAYMENTS_API_KEY");
+    const refreshToken = Deno.env.get("ZOHO_REFRESH_TOKEN");
+    const clientId = Deno.env.get("ZOHO_CLIENT_ID");
+    const clientSecret = Deno.env.get("ZOHO_CLIENT_SECRET");
 
-    // Strategy 1: OAuth Refresh (Try .in and .com)
-    if (clientId && clientSecret && refreshToken && refreshToken.startsWith('1000.')) {
+    // Match verify-zoho-payment logic for consistency
+    if (apiKey) {
+        console.log(`[AUTH] Priority: Using ZOHO_PAYMENTS_API_KEY.`);
+        return { token: apiKey, prefix: "Zoho-encapikey", domain: "in" };
+    }
+    if (refreshToken && !refreshToken.startsWith("1000.")) {
+        console.log(`[AUTH] Priority: Using static ZOHO_REFRESH_TOKEN.`);
+        return { token: refreshToken, prefix: "Zoho-oauthtoken", domain: "in" };
+    }
+
+    if (clientId && clientSecret && refreshToken && refreshToken.startsWith("1000.")) {
+        console.log(`[AUTH] Attempting OAuth refresh for token starting with: ${refreshToken.substring(0, 10)}...`);
         for (const domain of ["in", "com"]) {
             try {
                 const tokenUrl = `https://accounts.zoho.${domain}/oauth/v2/token?refresh_token=${refreshToken}&client_id=${clientId}&client_secret=${clientSecret}&grant_type=refresh_token`;
-                const response = await fetch(tokenUrl, { method: 'POST' });
+                const response = await fetch(tokenUrl, { method: "POST" });
                 const data = await response.json();
-                if (response.ok && data.access_token) return data.access_token;
+                if (response.ok && data.access_token) {
+                    console.log(`[AUTH] Successfully obtained access token from domain: ${domain}`);
+                    return { token: data.access_token, prefix: "Zoho-oauthtoken", domain };
+                }
+                console.warn(`[AUTH] Domain ${domain} returned error:`, JSON.stringify(data));
             } catch (err) {
                 console.warn(`[AUTH] OAuth refresh failed for domain ${domain}:`, err.message);
             }
         }
     }
-
-    // Strategy 2: Static Token Fallback
-    if (refreshToken?.includes('.') && !refreshToken.startsWith('1000.')) return refreshToken;
-    if (backupApiKey?.includes('.')) return backupApiKey;
 
     throw new Error("Zoho authentication failed. Ensure ZOHO_CLIENT_ID, ZOHO_CLIENT_SECRET, and ZOHO_REFRESH_TOKEN are set correctly.");
 }
@@ -137,45 +147,66 @@ async function createPaymentSession(params: {
     currency: string;
     email: string;
     name: string;
+    phone: string;
     registrationId: string;
-    description: string;
 }) {
-    const accessToken = await getZohoAccessToken();
+    const { token: accessToken, prefix: authHeader, domain } = await getZohoAccessToken();
     const orgId = Deno.env.get('ZOHO_USER_ID') || "60058565264";
-    const accountId = Deno.env.get('ZOHO_PAYMENTS_ACCOUNT_ID') || orgId;
-
-    // Zoho Checkout Session URL
-    const url = `https://payments.zoho.in/api/v1/paymentsessions?account_id=${accountId}`;
+    const paymentId = Deno.env.get('ZOHO_PAYMENTS_ACCOUNT_ID') || orgId;
 
     const payload = {
-        amount: Number(params.amount),
+        amount: Math.round(Number(params.amount)),
         currency: params.currency,
         reference_number: params.registrationId,
-        description: params.description,
     };
 
-    try {
+    async function trySessionWithId(id: string) {
+        const url = `https://payments.zoho.${domain}/api/v1/paymentsessions?account_id=${id}`;
+        console.log(`[ZOHO][SESSION][TRY] account_id: ${id} | Region: ${domain} | AuthMode: ${authHeader}`);
+
         const res = await fetch(url, {
             method: 'POST',
             headers: {
-                'Authorization': `Zoho-oauthtoken ${accessToken}`,
+                'Authorization': `${authHeader} ${accessToken}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(payload)
         });
 
+        if (res.status === 204) return { success: true };
         const data = await res.json();
-        const session = data.payments_session || data;
+        if (res.ok) return data;
+        return { error: true, status: res.status, data };
+    }
 
-        if (res.ok && session.payments_session_id) {
+    try {
+        // Attempt 1: Try Payment Account ID
+        let result = await trySessionWithId(paymentId);
+
+        // Attempt 2: Fallback to Org/User ID if not authorized
+        if (result.error && (result.data?.message === "Not An Authorized User" || result.data?.message === "Invalid Ticket Used") && paymentId !== orgId) {
+            console.warn(`[ZOHO][SESSION][RETRY] ID ${paymentId} failed (${result.data?.message}). Trying User ID ${orgId}...`);
+            result = await trySessionWithId(orgId);
+        }
+
+        if (result.error) {
+            const errData = result.data;
+            console.error(`[ZOHO][SESSION][FAILED] Status ${result.status}:`, JSON.stringify(errData));
+
+            if (errData.message === "Not An Authorized User") {
+                throw new Error(`Zoho Authorization Error: Neither Account ID "${paymentId}" nor User ID "${orgId}" is authorized for this token in region "${domain}". Please verify permissions in Zoho Payments.`);
+            }
+            throw new Error(errData.message || "Failed to create payment session");
+        }
+
+        const session = result.payments_session || result;
+        if (session.payments_session_id) {
             return {
                 payment_session_id: session.payments_session_id,
                 ...session
             };
         }
-
-        console.warn(`[ZOHO][SESSION][ERROR] ${res.status}: ${JSON.stringify(data)}`);
-        throw new Error(data.message || "Failed to create payment session");
+        throw new Error("Payment Session ID missing from successful response");
     } catch (err) {
         console.error('[ZOHO][SESSION][CRITICAL]:', err.message);
         throw err;
@@ -251,8 +282,8 @@ serve(async (req: Request) => {
                         currency: 'INR',
                         email: email || 'customer@codekar.in',
                         name: name || 'Participant',
-                        registrationId: reg.id,
-                        description: `CodeKar 2026 - ${name}`
+                        phone: phone || '0000000000',
+                        registrationId: reg.id
                     });
 
                     // Save session ID to DB
