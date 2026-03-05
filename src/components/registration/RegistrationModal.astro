@@ -510,6 +510,7 @@ const INDIVIDUAL_AMOUNT = import.meta.env.INDIVIDUAL_REGISTRATION_AMOUNT || 299;
         });
 
         const result = await response.json();
+        console.log('[ZOHO][HANDLER][RESPONSE]', result);
 
         if (!response.ok || result.error) {
           throw new Error(result.error || result.hint || `Server error ${response.status}`);

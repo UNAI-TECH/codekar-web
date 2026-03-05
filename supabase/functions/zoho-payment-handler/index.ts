@@ -54,7 +54,7 @@ async function createPaymentLink(params: {
     const orgId = Deno.env.get('ZOHO_USER_ID') || "60058565264";
     const accountId = Deno.env.get('ZOHO_PAYMENTS_ACCOUNT_ID') || orgId;
 
-    const returnUrl = `https://www.codekarx.com/payment-success?registration_id=${params.registrationId}`;
+    const returnUrl = `https://www.codekar.in/payment-success?registration_id=${params.registrationId}`;
 
     async function tryRequest(domain: string, service: 'payments' | 'books', header: string, prefix: string, id: string) {
         const url = service === 'payments'
@@ -70,12 +70,12 @@ async function createPaymentLink(params: {
             amount: parseFloat(formattedAmount), // Numerically 299.00
             currency_code: params.currency,
             description: params.description,
-            email: params.email || 'customer@codekarx.com',
+            email: params.email || 'customer@codekar.in',
             payment_gateways: [{ gateway_name: "razorpay" }]
         } : {
             amount: formattedAmount, // String "299.00"
             currency: params.currency,
-            email: params.email || 'customer@codekarx.com',
+            email: params.email || 'customer@codekar.in',
             return_url: returnUrl,
             reference_id: params.registrationId,
             description: params.description,
@@ -188,13 +188,19 @@ serve(async (req: Request) => {
     try {
         const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
         const body = await req.json();
-        const { action } = body;
+        console.log('[HANDLER][RAW_BODY]', JSON.stringify(body));
+
+        const rawAction = body.action || "";
+        const action = rawAction.toString().trim().toLowerCase();
+
+        console.log(`[HANDLER][DEBUG] Normalized Action: "${action}"`);
 
         if (action === 'health-check') {
             return new Response(JSON.stringify({ status: 'ok' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
 
-        if (action === 'create-link' || action === 'create-session') {
+        if (action === 'create-link' || action === 'create-session' || action === 'link' || action === 'session') {
+            console.log('[HANDLER][FLOW] Entering creation block');
             const {
                 name,
                 email,
@@ -211,6 +217,7 @@ serve(async (req: Request) => {
                 member_3,
                 member_4
             } = body;
+
 
             // 1. Insert into Supabase first
             const { data: reg, error: dbError } = await supabase.from('registrations').insert({
@@ -242,7 +249,7 @@ serve(async (req: Request) => {
                     const sessionData = await createPaymentSession({
                         amount: Math.max(Number(amount), 1),
                         currency: 'INR',
-                        email: email || 'customer@codekarx.com',
+                        email: email || 'customer@codekar.in',
                         name: name || 'Participant',
                         registrationId: reg.id,
                         description: `CodeKar 2026 - ${name}`
@@ -263,7 +270,7 @@ serve(async (req: Request) => {
                     const { url, link_id } = await createPaymentLink({
                         amount: Math.max(Number(amount), 1),
                         currency: 'INR',
-                        email: email || 'customer@codekarx.com',
+                        email: email || 'customer@codekar.in',
                         name: name || 'Participant',
                         registrationId: reg.id,
                         description: `CodeKar 2026 - ${name}`
