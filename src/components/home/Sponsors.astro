@@ -17,18 +17,6 @@ const sponsors = Array(4).fill({ name: "Sponsor Name", tier: "Gold" });
     </div>
     -->
     
-    <!-- Highlighted Sponsor Challenges CTA -->
-    <div class="highlight-content">
-      <div class="highlight-icon">
-        <img src="/Gemini_Generated_Image_27h89427h89427h8-removebg-preview.png" alt="Sponsor Challenge Icon" />
-      </div>
-      <h3>Sponsor Challenges</h3>
-      <p>Tackle real-world problems from industry leaders and win exclusive prizes!</p>
-      <a href="/challenges" class="highlight-btn" data-lenis-prevent>
-        View All Challenges
-        <span class="arrow">→</span>
-      </a>
-    </div>
   </div>
 </section>
 
@@ -75,85 +63,6 @@ const sponsors = Array(4).fill({ name: "Sponsor Name", tier: "Gold" });
     color: #64748b;
   }
 
-  /* Highlight Content Styles (No Background Wrapper) */
-  .highlight-content {
-    background: white;
-    border-radius: 1.25rem;
-    padding: 2rem;
-    text-align: center;
-    position: relative;
-    max-width: 500px;
-    margin: 3rem auto 0; /* Added top margin */
-    border: 1px solid #e2e8f0; /* Added border for definition */
-    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05); /* Added shadow */
-  }
-
-  .highlight-icon {
-    width: 80px;
-    height: 80px;
-    margin: 0 auto 1rem;
-    animation: bounce 2s infinite;
-  }
-
-  .highlight-icon img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
-  }
-
-  @keyframes bounce {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-8px); }
-  }
-
-  .highlight-content h3 {
-    font-size: 1.5rem;
-    font-weight: 800;
-    background: linear-gradient(135deg, var(--color-s-primary), var(--color-s-accent));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    margin-bottom: 0.5rem;
-  }
-
-  .highlight-content p {
-    font-size: 1rem;
-    color: #64748b;
-    margin-bottom: 1.5rem;
-    max-width: 400px;
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  .highlight-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: var(--color-s-primary);
-    color: white;
-    padding: 1rem 2rem;
-    border-radius: 9999px;
-    font-weight: 600;
-    font-size: 1.125rem;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 14px 0 rgba(30, 90, 157, 0.4);
-  }
-
-  .highlight-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px 0 rgba(30, 90, 157, 0.5);
-    background: var(--color-s-primary-dark);
-  }
-
-  .arrow {
-    font-size: 1.5rem;
-    transition: transform 0.3s ease;
-  }
-
-  .highlight-btn:hover .arrow {
-    transform: translateX(5px);
-  }
-
   @media (max-width: 768px) {
     .section {
       padding: 4rem 0;
@@ -167,30 +76,6 @@ const sponsors = Array(4).fill({ name: "Sponsor Name", tier: "Gold" });
 
     .sponsor-card {
       padding: 1.5rem;
-    }
-
-    .highlight-content {
-      padding: 1.5rem;
-      max-width: 100%;
-      margin: 2rem auto 0;
-    }
-
-    .highlight-content h3 {
-      font-size: 1.25rem;
-    }
-
-    .highlight-content p {
-      font-size: 0.9375rem;
-    }
-
-    .highlight-btn {
-      padding: 0.875rem 1.5rem;
-      font-size: 1rem;
-    }
-
-    .highlight-icon {
-      width: 64px;
-      height: 64px;
     }
   }
 
@@ -210,15 +95,6 @@ const sponsors = Array(4).fill({ name: "Sponsor Name", tier: "Gold" });
 
     .placeholder-logo {
       font-size: 1.5rem;
-    }
-
-    .highlight-content {
-      padding: 1.25rem;
-    }
-
-    .highlight-btn {
-      padding: 0.75rem 1.25rem;
-      font-size: 0.9375rem;
     }
   }
 </style>
