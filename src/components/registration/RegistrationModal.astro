@@ -398,6 +398,9 @@ const INDIVIDUAL_AMOUNT = import.meta.env.INDIVIDUAL_REGISTRATION_AMOUNT || 299;
     });
 
     // ── Step 1: Select registration type ──────────────────────────────────────
+    typeBtns?.forEach(btn => {
+      btn.addEventListener('click', () => {
+        // @ts-ignore
         registrationType = btn.dataset.type;
         updateTypeUI(registrationType);
       });
