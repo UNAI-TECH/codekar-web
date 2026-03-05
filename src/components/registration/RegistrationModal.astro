@@ -293,7 +293,7 @@ const INDIVIDUAL_AMOUNT = import.meta.env.INDIVIDUAL_REGISTRATION_AMOUNT || 299;
         const { error } = await supabase.auth.signInWithOAuth({
           provider: 'google',
           options: {
-            redirectTo: window.location.origin
+            redirectTo: window.location.origin + '?openModal=true&step=1'
           }
         });
         if (error) console.error('OAuth Error:', error.message);
@@ -351,6 +351,11 @@ const INDIVIDUAL_AMOUNT = import.meta.env.INDIVIDUAL_REGISTRATION_AMOUNT || 299;
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('openModal') === 'true') {
       if (modal) modal.dataset.open = 'true';
+      const targetStep = urlParams.get('step');
+      if (targetStep === '1' && step0 && step1) {
+        step0.classList.remove('active');
+        step1.classList.add('active');
+      }
       history.replaceState({}, '', window.location.pathname);
     }
 
