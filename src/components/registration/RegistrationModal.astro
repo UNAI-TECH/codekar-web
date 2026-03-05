@@ -275,13 +275,24 @@ const INDIVIDUAL_AMOUNT = import.meta.env.INDIVIDUAL_REGISTRATION_AMOUNT || 299;
         if (session) {
           const user = session.user;
           if (user) {
-            (document.getElementById('full-name') as HTMLInputElement).value = user.user_metadata.full_name || '';
-            (document.getElementById('email') as HTMLInputElement).value = user.email || '';
+            const fullNameInput = document.getElementById('full-name') as HTMLInputElement;
+            const emailInput = document.getElementById('email') as HTMLInputElement;
+            if (fullNameInput) fullNameInput.value = user.user_metadata.full_name || '';
+            if (emailInput) emailInput.value = user.email || '';
             
-            // Advance to step 1 automatically if modal is open
+            // If we came back from auth, or if the user is already logged in, skip step 0
             if (step0 && step1) {
               step0.classList.remove('active');
               step1.classList.add('active');
+            }
+
+            // Auto-open modal if returning from auth redirect
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('auth') === 'success' && modal) {
+              modal.dataset.open = 'true';
+              // Clean up URL without reload
+              const newUrl = window.location.pathname + window.location.search.replace(/[?&]auth=success/, '').replace(/^&/, '?');
+              window.history.replaceState({}, '', newUrl);
             }
           }
         }
@@ -293,7 +304,7 @@ const INDIVIDUAL_AMOUNT = import.meta.env.INDIVIDUAL_REGISTRATION_AMOUNT || 299;
         const { error } = await supabase.auth.signInWithOAuth({
           provider: 'google',
           options: {
-            redirectTo: window.location.origin
+            redirectTo: `${window.location.origin}${window.location.pathname}?auth=success`
           }
         });
         if (error) console.error('OAuth Error:', error.message);
