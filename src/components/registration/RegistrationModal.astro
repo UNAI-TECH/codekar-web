@@ -6,7 +6,7 @@ const INDIVIDUAL_AMOUNT = import.meta.env.INDIVIDUAL_REGISTRATION_AMOUNT || 299;
      data-team-amount={TEAM_AMOUNT} 
      data-individual-amount={INDIVIDUAL_AMOUNT}>
   <div class="modal-overlay"></div>
-  <div class="modal-content">
+  <div class="modal-content" data-lenis-prevent>
     <button class="close-btn" aria-label="Close modal">&times;</button>
     
     <!-- Navigation Tabs for Modal -->
@@ -672,13 +672,13 @@ const INDIVIDUAL_AMOUNT = import.meta.env.INDIVIDUAL_REGISTRATION_AMOUNT || 299;
     max-height: 90dvh;
     overflow-y: auto !important;
     overflow-x: hidden;
-    overscroll-behavior: contain;
-    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain !important;
+    -webkit-overflow-scrolling: touch !important;
     scroll-behavior: smooth;
     scrollbar-width: thin;
     scrollbar-color: #cbd5e1 transparent;
     pointer-events: auto !important;
-    touch-action: auto !important;
+    touch-action: pan-y pinch-zoom !important;
     -webkit-tap-highlight-color: transparent;
   }
 
