@@ -44,7 +44,17 @@ const { hideCTA = false } = Astro.props;
 
     // Open Registration Modal
     const applyBtn = document.getElementById('apply-btn');
-    applyBtn?.addEventListener('click', () => {
+    applyBtn?.addEventListener('click', async () => {
+      // Import supabase to check session
+      const { supabase } = await import('../../lib/supabase');
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (session) {
+        // If already logged in, go to registration type page
+        window.location.href = '/type';
+        return;
+      }
+
       const modal = document.getElementById('registration-modal');
       if (modal) {
         modal.dataset.open = "true";
