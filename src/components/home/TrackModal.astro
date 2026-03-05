@@ -3,7 +3,7 @@ const { trackData } = Astro.props;
 ---
 
 <div id="track-modal" class="modal-overlay" data-open="false">
-  <div class="modal-content">
+  <div class="modal-content" data-lenis-prevent>
     <button class="close-btn" id="close-modal">
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -148,11 +148,11 @@ const { trackData } = Astro.props;
     transform: scale(0.9) translateY(20px);
     transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
     /* Enable smooth scrolling on iOS */
-    -webkit-overflow-scrolling: touch;
+    -webkit-overflow-scrolling: touch !important;
     /* Prevent scroll chaining */
-    overscroll-behavior: contain;
+    overscroll-behavior: contain !important;
     /* Prevent touch gestures on background */
-    touch-action: pan-y;
+    touch-action: pan-y pinch-zoom !important;
   }
   
   .modal-overlay[data-open="true"] .modal-content {
