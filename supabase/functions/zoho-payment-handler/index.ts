@@ -135,18 +135,43 @@ serve(async (req: Request) => {
         }
 
         if (action === 'create-link') {
-            const { name, email, phone, amount, registration_type, team_name, ...extraData } = body;
+            const {
+                name,
+                email,
+                phone,
+                amount,
+                registration_type,
+                team_name,
+                college,
+                department,
+                year,
+                project_track,
+                project_name,
+                member_2,
+                member_3,
+                member_4
+            } = body;
 
-            // 1. Insert into Supabase first
+            // 1. Insert into Supabase first (Explicitly map columns to avoid 'action' error)
             const { data: reg, error: dbError } = await supabase.from('registrations').insert({
                 full_name: name,
                 email: email || null,
                 phone: phone,
-                amount: Number(amount),
-                payment_status: 'pending',
+                college: college || null,
+                department: department || null,
+                year_of_study: year || null,
+                track: project_track || null,
+                project_name: project_name || null,
                 registration_type: registration_type || 'individual',
                 team_name: team_name || null,
-                ...extraData // mapping any other fields directly
+                amount: Number(amount),
+                payment_status: 'pending',
+                member_2_name: member_2 || null,
+                member_3_name: member_3 || null,
+                member_4_name: member_4 || null,
+                team_leader_name: name,
+                leader_phone: phone,
+                leader_email: email || null,
             }).select('id').single();
 
             if (dbError) throw new Error(`Database Insert Failed: ${dbError.message}`);
