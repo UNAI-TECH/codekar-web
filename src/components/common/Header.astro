@@ -48,6 +48,17 @@ const { hideCTA = false } = Astro.props;
 
     // Open Registration Modal
     const applyBtn = document.getElementById('apply-btn');
+
+    // Update button text if session exists
+    const updateButtonText = async () => {
+      const { supabase } = await import('../../lib/supabase');
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session && applyBtn) {
+        applyBtn.textContent = 'Register Now';
+      }
+    };
+    updateButtonText();
+
     applyBtn?.addEventListener('click', async () => {
       // Import supabase to check session
       const { supabase } = await import('../../lib/supabase');
