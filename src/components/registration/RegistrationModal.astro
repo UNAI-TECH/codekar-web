@@ -269,35 +269,52 @@ const INDIVIDUAL_AMOUNT = import.meta.env.INDIVIDUAL_REGISTRATION_AMOUNT || 299;
     const SUPABASE_URL = (window as any).__SUPABASE_URL__ || import.meta.env?.PUBLIC_SUPABASE_URL || '';
     const SUPABASE_ANON_KEY = (window as any).__SUPABASE_ANON_KEY__ || import.meta.env?.PUBLIC_SUPABASE_ANON_KEY || '';
 
-    async function checkUser() {
-      if (supabase) {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-          const user = session.user;
-          if (user) {
-            const fullNameInput = document.getElementById('full-name') as HTMLInputElement;
-            const emailInput = document.getElementById('email') as HTMLInputElement;
-            if (fullNameInput) fullNameInput.value = user.user_metadata.full_name || '';
-            if (emailInput) emailInput.value = user.email || '';
-            
-            // If we came back from auth, or if the user is already logged in, skip step 0
-            if (step0 && step1) {
-              step0.classList.remove('active');
-              step1.classList.add('active');
-            }
+    async function handleUserSession(user: any) {
+      if (!user) return;
 
-            // Auto-open modal if returning from auth redirect
-            const params = new URLSearchParams(window.location.search);
-            if (params.get('auth') === 'success' && modal) {
-              modal.dataset.open = 'true';
-              // Clean up URL without reload
-              const newUrl = window.location.pathname + window.location.search.replace(/[?&]auth=success/, '').replace(/^&/, '?');
-              window.history.replaceState({}, '', newUrl);
-            }
-          }
-        }
+      const fullNameInput = document.getElementById('full-name') as HTMLInputElement;
+      const emailInput = document.getElementById('email') as HTMLInputElement;
+      if (fullNameInput) fullNameInput.value = user.user_metadata.full_name || '';
+      if (emailInput) emailInput.value = user.email || '';
+      
+      // Skip auth step (Step 0) and go to Registration Type (Step 1)
+      if (step0 && step1) {
+        step0.classList.remove('active');
+        step1.classList.add('active');
+      }
+
+      // Auto-open modal if returning from auth redirect
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('auth') === 'success' && modal) {
+        modal.dataset.open = 'true';
+        // Clean up URL without reload
+        const newSearch = window.location.search
+          .replace(/[?&]auth=success/, '')
+          .replace(/^&/, '?')
+          .replace(/\?$/, '');
+        const newUrl = window.location.pathname + newSearch;
+        window.history.replaceState({}, '', newUrl);
       }
     }
+
+    async function initializeAuth() {
+      if (!supabase) return;
+
+      // Check current session
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        handleUserSession(session.user);
+      }
+
+      // Listen for auth state changes (crucial for OAuth redirect pickup)
+      supabase.auth.onAuthStateChange((event, session) => {
+        if (session?.user) {
+          handleUserSession(session.user);
+        }
+      });
+    }
+
+    initializeAuth();
 
     googleSigninBtn?.addEventListener('click', async () => {
       if (supabase) {
