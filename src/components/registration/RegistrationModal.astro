@@ -242,7 +242,7 @@ const INDIVIDUAL_AMOUNT = import.meta.env.INDIVIDUAL_REGISTRATION_AMOUNT || 299;
   </div>
 </div>
 
-<script src="https://js.zoho.in/v1/zpayments.js" is:inline></script>
+<script src="https://static.zohocdn.com/zpay/zpay-js/v1/zpayments.js" is:inline></script>
 
 <script>
   import { supabase } from '../../lib/supabase';
@@ -550,7 +550,8 @@ const INDIVIDUAL_AMOUNT = import.meta.env.INDIVIDUAL_REGISTRATION_AMOUNT || 299;
         const zpayments = new ZPayments();
         zpayments.initialize({
           'api_key': ZOHO_API_KEY,
-          'payment_session_id': paymentSessionId
+          'payment_session_id': paymentSessionId,
+          'domain': 'IN'
         });
 
         // Global callback handler

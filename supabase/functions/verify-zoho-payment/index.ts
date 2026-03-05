@@ -72,11 +72,13 @@ async function checkZohoSessionStatus(sessionId: string): Promise<{
     if (!res.ok) return { status: "pending" };
 
     const data = await res.json();
-    const sessionData = data.paymentsession || data;
+    const sessionData = data.payments_session || data;
     const sessionStatus = (sessionData.status || "").toLowerCase();
 
-    if (sessionStatus === "completed" || sessionStatus === "paid") {
-        return { status: "paid", zoho_payment_id: sessionData.payment_id };
+    if (sessionStatus === "succeeded") {
+        const payments = sessionData.payments || [];
+        const lastPayment = payments[payments.length - 1];
+        return { status: "paid", zoho_payment_id: lastPayment?.payment_id };
     } else if (sessionStatus === "failed") {
         return { status: "failed" };
     }

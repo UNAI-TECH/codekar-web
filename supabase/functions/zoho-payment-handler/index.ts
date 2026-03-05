@@ -148,15 +148,10 @@ async function createPaymentSession(params: {
     const url = `https://payments.zoho.in/api/v1/paymentsessions?account_id=${accountId}`;
 
     const payload = {
-        amount: Number(params.amount).toFixed(2),
-        currency_code: params.currency,
-        reference_id: params.registrationId,
+        amount: Number(params.amount),
+        currency: params.currency,
+        reference_number: params.registrationId,
         description: params.description,
-        customer_details: {
-            email: params.email || 'customer@codekarx.com',
-            name: params.name || 'Participant'
-        },
-        return_url: `https://www.codekarx.com/payment-success?registration_id=${params.registrationId}`
     };
 
     try {
@@ -170,8 +165,13 @@ async function createPaymentSession(params: {
         });
 
         const data = await res.json();
-        if (res.ok && data.payment_session_id) {
-            return data;
+        const session = data.payments_session || data;
+
+        if (res.ok && session.payments_session_id) {
+            return {
+                payment_session_id: session.payments_session_id,
+                ...session
+            };
         }
 
         console.warn(`[ZOHO][SESSION][ERROR] ${res.status}: ${JSON.stringify(data)}`);
