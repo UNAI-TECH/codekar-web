@@ -63,20 +63,24 @@ async function createPaymentLink(params: {
 
         const authValue = prefix ? `${prefix} ${accessToken}` : accessToken;
 
+        // Precision Formatting: Zoho often requires exactly 2 decimal places for amounts
+        const formattedAmount = Number(params.amount).toFixed(2);
+
         const payload = service === 'books' ? {
-            amount: params.amount,
+            amount: parseFloat(formattedAmount), // Numerically 299.00
             currency_code: params.currency,
             description: params.description,
-            email: params.email,
+            email: params.email || 'customer@codekarx.com',
             payment_gateways: [{ gateway_name: "razorpay" }]
         } : {
-            amount: params.amount,
+            amount: formattedAmount, // String "299.00"
             currency: params.currency,
-            email: params.email,
+            email: params.email || 'customer@codekarx.com',
             return_url: returnUrl,
             reference_id: params.registrationId,
             description: params.description,
-            customer_name: params.name
+            customer_name: params.name || 'Participant',
+            purpose: 'CODEKAR-REGISTRATION-2026'
         };
 
         try {
@@ -85,7 +89,10 @@ async function createPaymentLink(params: {
                 headers: { [header]: authValue, 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
-            const data = await res.json();
+            const text = await res.text();
+            let data;
+            try { data = JSON.parse(text); } catch (e) { data = { raw: text }; }
+
             if (res.ok) return data;
             console.warn(`[ZOHO][${service}][${domain}][${header}] ✗ ${res.status}: ${JSON.stringify(data)}`);
             return null;
@@ -126,6 +133,15 @@ serve(async (req: Request) => {
     if (req.method === 'OPTIONS') return new Response(null, { status: 200, headers: corsHeaders });
 
     try {
+        console.log(`[DEBUG] Environment Check:
+            ZOHO_CLIENT_ID: ${Deno.env.get('ZOHO_CLIENT_ID') ? 'Set' : 'MISSING'}
+            ZOHO_CLIENT_SECRET: ${Deno.env.get('ZOHO_CLIENT_SECRET') ? 'Set' : 'MISSING'}
+            ZOHO_REFRESH_TOKEN: ${Deno.env.get('ZOHO_REFRESH_TOKEN') ? 'Set' : 'MISSING'}
+            ZOHO_PAYMENTS_ACCOUNT_ID: ${Deno.env.get('ZOHO_PAYMENTS_ACCOUNT_ID') ? 'Set' : 'MISSING'}
+            ZOHO_USER_ID: ${Deno.env.get('ZOHO_USER_ID') ? 'Set' : 'MISSING'}
+            SUPABASE_URL: ${Deno.env.get('SUPABASE_URL') ? 'Set' : 'MISSING'}
+            SUPABASE_SERVICE_ROLE_KEY: ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ? 'Set' : 'MISSING'}`);
+
         const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
         const body = await req.json();
         const { action } = body;
@@ -154,9 +170,9 @@ serve(async (req: Request) => {
 
             // 1. Insert into Supabase first (Explicitly map columns to avoid 'action' error)
             const { data: reg, error: dbError } = await supabase.from('registrations').insert({
-                full_name: name,
+                full_name: name || 'Unknown',
                 email: email || null,
-                phone: phone,
+                phone: phone || '0000000000',
                 college: college || null,
                 department: department || null,
                 year_of_study: year || null,
@@ -164,13 +180,13 @@ serve(async (req: Request) => {
                 project_name: project_name || null,
                 registration_type: registration_type || 'individual',
                 team_name: team_name || null,
-                amount: Number(amount),
+                amount: Number(amount) || 0,
                 payment_status: 'pending',
                 member_2_name: member_2 || null,
                 member_3_name: member_3 || null,
                 member_4_name: member_4 || null,
-                team_leader_name: name,
-                leader_phone: phone,
+                team_leader_name: name || 'Unknown',
+                leader_phone: phone || '0000000000',
                 leader_email: email || null,
             }).select('id').single();
 
@@ -192,7 +208,8 @@ serve(async (req: Request) => {
                 return new Response(JSON.stringify({ success: true, payment_url: url, registration_id: reg.id }), {
                     headers: { ...corsHeaders, 'Content-Type': 'application/json' }
                 });
-            } catch (err) {
+            } catch (err: any) {
+                console.error('[ZOHO CALL FAILED]:', err.message);
                 await supabase.from('registrations').update({ payment_status: 'link_failed' }).eq('id', reg.id);
                 throw err;
             }

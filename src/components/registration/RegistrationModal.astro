@@ -17,8 +17,21 @@ const INDIVIDUAL_AMOUNT = import.meta.env.INDIVIDUAL_REGISTRATION_AMOUNT || 299;
 
     <!-- MAIN REGISTRATION FLOW -->
     <div id="new-registration" class="tab-content active">
+      <!-- Step 0: Authentication -->
+      <div id="step-0" class="step active">
+        <div class="auth-card">
+          <div class="auth-icon">🔐</div>
+          <h2>Authentication Required</h2>
+          <p>Please sign in with Google to continue with your registration.</p>
+          <button id="google-signin-btn" class="google-btn">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" width="20" height="20">
+            Continue with Google
+          </button>
+        </div>
+      </div>
+
       <!-- Step 1: Registration Type -->
-      <div id="step-1" class="step active">
+      <div id="step-1" class="step">
         <h2>Registration Type</h2>
         <div class="options">
           <button class="type-btn" data-type="individual">
@@ -222,12 +235,15 @@ const INDIVIDUAL_AMOUNT = import.meta.env.INDIVIDUAL_REGISTRATION_AMOUNT || 299;
 </div>
 
 <script>
+  import { supabase } from '../../lib/supabase';
+
   document.addEventListener('DOMContentLoaded', () => {
     // DOM Elements
     const modal = document.getElementById('registration-modal');
     const overlay = modal?.querySelector('.modal-overlay');
     const closeBtn = modal?.querySelector('.close-btn');
     const typeBtns = modal?.querySelectorAll('.type-btn');
+    const step0 = document.getElementById('step-0');
     const step1 = document.getElementById('step-1');
     const step2 = document.getElementById('step-2');
     const step3 = document.getElementById('step-3');
@@ -237,6 +253,7 @@ const INDIVIDUAL_AMOUNT = import.meta.env.INDIVIDUAL_REGISTRATION_AMOUNT || 299;
     const formTitle = document.getElementById('form-title');
     const tabBtns = document.querySelectorAll('.tab-btn');
     const tabContents = document.querySelectorAll('.tab-content');
+    const googleSigninBtn = document.getElementById('google-signin-btn');
 
     // Payment Step 3 States
     const paymentGenerating = document.getElementById('payment-generating');
@@ -251,6 +268,42 @@ const INDIVIDUAL_AMOUNT = import.meta.env.INDIVIDUAL_REGISTRATION_AMOUNT || 299;
 
     const SUPABASE_URL = (window as any).__SUPABASE_URL__ || import.meta.env?.PUBLIC_SUPABASE_URL || '';
     const SUPABASE_ANON_KEY = (window as any).__SUPABASE_ANON_KEY__ || import.meta.env?.PUBLIC_SUPABASE_ANON_KEY || '';
+
+    async function checkUser() {
+      if (supabase) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          const user = session.user;
+          if (user) {
+            (document.getElementById('full-name') as HTMLInputElement).value = user.user_metadata.full_name || '';
+            (document.getElementById('email') as HTMLInputElement).value = user.email || '';
+            
+            // Advance to step 1 automatically if modal is open
+            if (step0 && step1) {
+              step0.classList.remove('active');
+              step1.classList.add('active');
+            }
+          }
+        }
+      }
+    }
+
+    googleSigninBtn?.addEventListener('click', async () => {
+      if (supabase) {
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: window.location.origin
+          }
+        });
+        if (error) console.error('OAuth Error:', error.message);
+      } else {
+        alert('Supabase client not initialized. Please check your configuration.');
+      }
+    });
+
+    // Check user status on load
+    checkUser();
 
     const teamAmt = Number(modal?.dataset.teamAmount) || 999;
     const individualAmt = Number(modal?.dataset.individualAmount) || 299;
@@ -584,21 +637,51 @@ const INDIVIDUAL_AMOUNT = import.meta.env.INDIVIDUAL_REGISTRATION_AMOUNT || 299;
     transition: transform 0.3s;
     max-height: 90vh;
     max-height: 90dvh;
-    overflow-y: auto;
+    overflow-y: auto !important;
     overflow-x: hidden;
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
     scroll-behavior: smooth;
     scrollbar-width: thin;
     scrollbar-color: #cbd5e1 transparent;
-    pointer-events: auto;
-    touch-action: manipulation;
+    pointer-events: auto !important;
+    touch-action: auto !important;
     -webkit-tap-highlight-color: transparent;
   }
 
   .modal-content::-webkit-scrollbar { width: 6px; }
   .modal-content::-webkit-scrollbar-track { background: transparent; }
   .modal-content::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+
+  /* Auth Card Styles */
+  .auth-card {
+    text-align: center;
+    padding: 2rem;
+    background: #f8fafc;
+    border-radius: 1rem;
+    border: 1px dashed #cbd5e1;
+  }
+  .auth-icon { font-size: 3rem; margin-bottom: 1rem; }
+  .google-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    width: 100%;
+    max-width: 300px;
+    margin: 1.5rem auto 0;
+    padding: 0.75rem 1.5rem;
+    background: white;
+    color: #374151;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  }
+  .google-btn:hover { background: #f9fafb; border-color: #9ca3af; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+  .google-btn img { pointer-events: none; }
 
   .modal[data-open="true"] .modal-content {
     transform: translateY(0);
