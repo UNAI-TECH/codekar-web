@@ -1,6 +1,10 @@
 ---
+const TEAM_AMOUNT = import.meta.env.TEAM_REGISTRATION_AMOUNT || 999;
+const INDIVIDUAL_AMOUNT = import.meta.env.INDIVIDUAL_REGISTRATION_AMOUNT || 299;
 ---
-<div id="registration-modal" class="modal" aria-hidden="true" data-open="false">
+<div id="registration-modal" class="modal" aria-hidden="true" data-open="false" 
+     data-team-amount={TEAM_AMOUNT} 
+     data-individual-amount={INDIVIDUAL_AMOUNT}>
   <div class="modal-overlay"></div>
   <div class="modal-content">
     <button class="close-btn" aria-label="Close modal">&times;</button>
@@ -13,6 +17,7 @@
 
     <!-- MAIN REGISTRATION FLOW -->
     <div id="new-registration" class="tab-content active">
+      <!-- Step 1: Registration Type -->
       <div id="step-1" class="step active">
         <h2>Registration Type</h2>
         <div class="options">
@@ -29,6 +34,7 @@
         </div>
       </div>
 
+      <!-- Step 2: Registration Form -->
       <div id="step-2" class="step">
         <h2 id="form-title">Individual Registration</h2>
         <form id="reg-form">
@@ -94,8 +100,8 @@
                 <option value="">Select Track</option>
                 <option value="education">Education</option>
                 <option value="entertainment">Entertainment</option>
-                <option value="ai-agents">AI Agents & Automations</option>
-                <option value="core-ai">Core AI & ML</option>
+                <option value="ai-agents">AI Agents &amp; Automations</option>
+                <option value="core-ai">Core AI &amp; ML</option>
                 <option value="big-data">Big Data</option>
                 <option value="cutting-edge">Cutting-edge Agents</option>
               </select>
@@ -124,87 +130,79 @@
         </form>
       </div>
 
-      <!-- Step 3: QR Code Reveal -->
+      <!-- Step 3: Payment Details -->
       <div id="step-3" class="step">
-        <div class="payment-card reveal-animation">
-          <div class="timer-badge">⌛ <span id="payment-timer">05:00</span></div>
-          <h2>Scan the QR to Complete Your Payment</h2>
-          
-          <div class="qr-container">
-            <img id="qr-image" src="" alt="Payment QR Code">
-          </div>
-          
-          <div class="payment-details">
-            <p class="amount-display">Amount: <span id="display-payment-amount">₹299</span></p>
-            <p class="payment-instructions">Pay using any UPI app (GPay, PhonePe, Paytm). Take a screenshot after payment.</p>
-          </div>
 
-          <div id="timer-expired-msg" class="error-msg" style="display: none;">
-            <p>Payment session expired. Please retry.</p>
-            <button type="button" class="retry-btn" id="retry-payment-btn">Retry Payment</button>
-          </div>
-          
-          <div class="actions">
-            <button type="button" class="cancel-btn" id="cancel-payment-btn">Cancel Payment</button>
-            <button type="button" class="submit-btn" id="ive-paid-btn">I've Paid</button>
-          </div>
+        <!-- Generating Link State -->
+        <div id="payment-generating" class="payment-state-card">
+          <div class="payment-spinner"></div>
+          <h2 style="margin-top:1.5rem;">Generating Payment Link…</h2>
+          <p style="color:#64748b; margin-top:0.5rem;">Please wait, we're connecting to the payment gateway.</p>
         </div>
-      </div>
 
-      <!-- Step 4: Payment Confirmation Form -->
-      <div id="step-4" class="step">
-        <h2>Payment Confirmation</h2>
-        <p style="color: #64748b; margin-bottom: 1.5rem;">Enter transaction details to complete registration.</p>
-        <form id="payment-confirm-form">
-          <div class="form-grid">
-            <div class="field full-width">
-              <label for="transaction-id">Transaction ID (Required)</label>
-              <input type="text" id="transaction-id" required>
-            </div>
-            
-            <div class="field full-width">
-              <label for="confirm-team-name">Team Name (Required)</label>
-              <input type="text" id="confirm-team-name" required>
-            </div>
-
-            <div class="field full-width">
-              <label for="payer-phone">Phone Number of Payer (Required)</label>
-              <input type="tel" id="payer-phone" required pattern="[0-9]{10}">
-            </div>
-          </div>
+        <!-- Payment Details State (the main card) -->
+        <div id="payment-details" class="payment-state-card" style="display:none;">
           
-          <div class="actions" style="margin-top: 2rem;">
-            <button type="button" class="back-btn" id="back-to-qr-btn">Back</button>
-            <button type="submit" class="submit-btn" id="complete-reg-btn" disabled>Complete Registration</button>
-          </div>
-        </form>
-      </div>
-
-      <!-- Step 5: Success & Invoice & WhatsApp Join -->
-      <div id="step-5" class="step">
-        <div class="success-message" style="text-align: center; padding: 1.5rem 0;">
-          <div class="success-icon">🎉</div>
-          <h2 style="margin-top: 1rem; color: #10b981;">Payment Successful!</h2>
-          <p style="color: #64748b; margin-top: 0.5rem; font-size: 1.1rem;">Your registration is complete.</p>
-          
-          <div class="code-box">
-             <span id="final-generated-code">IND-2026-XXXXX</span>
-             <small style="display: block; margin-top: 0.5rem; color: #64748b;">Participation Code</small>
+          <!-- Header -->
+          <div class="payment-header">
+            <div class="payment-logo">💳</div>
+            <h2>Payment Details</h2>
+            <span id="reg-type-badge" class="reg-badge">Individual</span>
           </div>
 
-          <div class="action-card">
-            <h3>Join WhatsApp Group</h3>
-            <p>Stay updated with event alerts and announcements.</p>
-            <div class="action-buttons">
-              <a href="https://chat.whatsapp.com/G5v7tXGzX7z7z7z7z7z7" target="_blank" class="whatsapp-btn">Join Official Group</a>
-              <button type="button" class="invoice-btn" id="download-invoice-btn">Download Invoice (PDF)</button>
+          <!-- Summary Info -->
+          <div class="payment-summary">
+            <div class="summary-row">
+              <span class="summary-label">Name</span>
+              <span id="pay-name" class="summary-value">—</span>
+            </div>
+            <div class="summary-row">
+              <span class="summary-label">Email</span>
+              <span id="pay-email" class="summary-value">—</span>
+            </div>
+            <div class="summary-row">
+              <span class="summary-label">Registration Type</span>
+              <span id="pay-type" class="summary-value">Individual</span>
             </div>
           </div>
-          
-          <div class="actions" style="margin-top: 2rem; justify-content: center;">
-             <button type="button" class="done-btn" onclick="document.querySelector('#registration-modal .close-btn').click();">Close</button>
+
+          <!-- Amount Box -->
+          <div class="amount-box">
+            <div class="amount-label">Registration Fee</div>
+            <div class="amount-value">
+              <span id="pay-amount">₹{INDIVIDUAL_AMOUNT}.00</span>
+              <span class="amount-sub">/ Registration Fee</span>
+            </div>
           </div>
+
+          <!-- Pay Button -->
+          <button id="pay-now-btn" class="pay-btn">
+            <span id="pay-btn-text">Pay ₹{INDIVIDUAL_AMOUNT} →</span>
+            <span id="pay-btn-spinner" class="pay-spinner" style="display:none;"></span>
+          </button>
+
+          <p class="secure-note">🔒 Secured by Zoho Payment Gateway</p>
+          
+          <button type="button" class="back-to-form-btn" id="back-to-form-btn">← Back to form</button>
         </div>
+
+        <!-- Error State -->
+        <div id="payment-error" class="payment-state-card" style="display:none;">
+          <div style="font-size:3rem;">⚠️</div>
+          <h2 style="color:#ef4444; margin-top:1rem;">Payment Link Failed</h2>
+          <p id="payment-error-msg" style="color:#64748b; margin:0.75rem 0 1.5rem;"></p>
+          <div class="error-hint">
+            <strong>Possible fix:</strong><br>
+            Ensure Supabase Edge Function secrets are configured:<br>
+            &nbsp;&nbsp;• ZOHO_CLIENT_ID<br>
+            &nbsp;&nbsp;• ZOHO_CLIENT_SECRET<br>
+            &nbsp;&nbsp;• ZOHO_REFRESH_TOKEN<br>
+            &nbsp;&nbsp;• ZOHO_PAYMENTS_API_KEY<br>
+            &nbsp;&nbsp;• ZOHO_PAYMENTS_ACCOUNT_ID
+          </div>
+          <button type="button" class="retry-btn" id="retry-payment-btn">← Go Back &amp; Retry</button>
+        </div>
+
       </div>
     </div>
 
@@ -233,48 +231,47 @@
     const step1 = document.getElementById('step-1');
     const step2 = document.getElementById('step-2');
     const step3 = document.getElementById('step-3');
-    const step4 = document.getElementById('step-4');
-    const step5 = document.getElementById('step-5');
     const backBtn = document.querySelector('.back-btn');
     const form = document.getElementById('reg-form');
-    const paymentForm = document.getElementById('payment-confirm-form') as HTMLFormElement;
     const teamNameField = document.getElementById('team-name-field');
     const formTitle = document.getElementById('form-title');
     const tabBtns = document.querySelectorAll('.tab-btn');
     const tabContents = document.querySelectorAll('.tab-content');
 
-    // Payment Workflow Elements
-    const qrImage = document.getElementById('qr-image') as HTMLImageElement;
-    const paymentTimerDisplay = document.getElementById('payment-timer');
-    const displayAmount = document.getElementById('display-payment-amount');
-    const timerExpiredMsg = document.getElementById('timer-expired-msg');
-    const ivePaidBtn = document.getElementById('ive-paid-btn');
-    const cancelPaymentBtn = document.getElementById('cancel-payment-btn');
+    // Payment Step 3 States
+    const paymentGenerating = document.getElementById('payment-generating');
+    const paymentDetails = document.getElementById('payment-details');
+    const paymentError = document.getElementById('payment-error');
+    const paymentErrorMsg = document.getElementById('payment-error-msg');
     const retryPaymentBtn = document.getElementById('retry-payment-btn');
-    const backToQrBtn = document.getElementById('back-to-qr-btn');
-    const completeRegBtn = document.getElementById('complete-reg-btn') as HTMLButtonElement;
-    const downloadInvoiceBtn = document.getElementById('download-invoice-btn');
+    const backToFormBtn = document.getElementById('back-to-form-btn');
+    const payNowBtn = document.getElementById('pay-now-btn') as HTMLButtonElement;
+    const payBtnText = document.getElementById('pay-btn-text');
+    const payBtnSpinner = document.getElementById('pay-btn-spinner');
+
+    const SUPABASE_URL = (window as any).__SUPABASE_URL__ || import.meta.env?.PUBLIC_SUPABASE_URL || '';
+    const SUPABASE_ANON_KEY = (window as any).__SUPABASE_ANON_KEY__ || import.meta.env?.PUBLIC_SUPABASE_ANON_KEY || '';
+
+    const teamAmt = Number(modal?.dataset.teamAmount) || 999;
+    const individualAmt = Number(modal?.dataset.individualAmount) || 299;
 
     let registrationType = 'individual';
-    let paymentTimer: any = null;
-    let timeLeft = 300; // 5 minutes
     let registrationData: any = {};
+    let zohoPaymentUrl = '';
 
-    // Handle scroll locking with Lenis
+    // ── Scroll Lock ────────────────────────────────────────────────────────────
     if (modal) {
       const observer = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
           if (mutation.type === 'attributes' && mutation.attributeName === 'data-open') {
             const isOpen = modal.dataset.open === 'true';
             modal.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
-
             if (isOpen) {
               document.body.classList.add('scroll-locked');
               if ((window as any).lenis) (window as any).lenis.stop();
             } else {
               document.body.classList.remove('scroll-locked');
               if ((window as any).lenis) (window as any).lenis.start();
-              stopTimer();
             }
           }
         });
@@ -282,27 +279,29 @@
       observer.observe(modal, { attributes: true });
     }
 
-    // Close Modal Function
+    // ── Close Modal ────────────────────────────────────────────────────────────
     function closeModal() {
       if (modal) {
-        modal.dataset.open = "false";
+        modal.dataset.open = 'false';
         modal.setAttribute('aria-hidden', 'true');
-        setTimeout(() => {
-          resetForm();
-        }, 400);
+        setTimeout(() => resetForm(), 400);
       }
     }
 
     if (overlay) overlay.addEventListener('click', closeModal);
     if (closeBtn) closeBtn.addEventListener('click', closeModal);
-    
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && modal?.dataset.open === "true") {
-        closeModal();
-      }
+      if (e.key === 'Escape' && modal?.dataset.open === 'true') closeModal();
     });
 
-    // Tab Switching Logic
+    // ── Auto-open modal if ?openModal=true (e.g. from payment-failed Try Again) ──
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('openModal') === 'true') {
+      if (modal) modal.dataset.open = 'true';
+      history.replaceState({}, '', window.location.pathname);
+    }
+
+    // ── Tab Switching ──────────────────────────────────────────────────────────
     tabBtns?.forEach(btn => {
       btn.addEventListener('click', () => {
         tabBtns.forEach(b => b.classList.remove('active'));
@@ -315,44 +314,44 @@
       });
     });
 
-    // Step 1: Selection
+    // ── Step 1: Select registration type ──────────────────────────────────────
     typeBtns?.forEach(btn => {
       btn.addEventListener('click', () => {
         // @ts-ignore
         registrationType = btn.dataset.type;
-        
+
         const formElements = form?.elements;
-        if(formElements) {
-            for(let i=0; i<formElements.length; i++) {
-                (formElements[i] as HTMLInputElement).disabled = false;
-            }
+        if (formElements) {
+          for (let i = 0; i < formElements.length; i++) {
+            (formElements[i] as HTMLInputElement).disabled = false;
+          }
         }
         const submitBtn = form?.querySelector('.submit-btn') as HTMLButtonElement;
         if (submitBtn) submitBtn.style.display = 'block';
         if (form) (form as HTMLFormElement).reset();
-        
+
         if (registrationType === 'team') {
-          if(teamNameField) teamNameField.style.display = 'block';
-          if(formTitle) formTitle.textContent = 'Team Registration';
+          if (teamNameField) teamNameField.style.display = 'block';
+          if (formTitle) formTitle.textContent = 'Team Registration';
           document.getElementById('team-name')?.setAttribute('required', 'true');
           document.querySelectorAll('.team-member-field')?.forEach(el => {
             (el as HTMLElement).style.display = 'flex';
           });
           const nameLabel = document.querySelector('label[for="full-name"]');
-          if(nameLabel) nameLabel.textContent = "Team Lead Name";
+          if (nameLabel) nameLabel.textContent = 'Team Lead Name';
           const emailLabel = document.querySelector('label[for="email"]');
-          if(emailLabel) emailLabel.textContent = "Team Lead Email (Main ID)";
+          if (emailLabel) emailLabel.textContent = 'Team Lead Email (Main ID)';
         } else {
-          if(teamNameField) teamNameField.style.display = 'none';
-          if(formTitle) formTitle.textContent = 'Individual Registration';
+          if (teamNameField) teamNameField.style.display = 'none';
+          if (formTitle) formTitle.textContent = 'Individual Registration';
           document.getElementById('team-name')?.removeAttribute('required');
           document.querySelectorAll('.team-member-field')?.forEach(el => {
             (el as HTMLElement).style.display = 'none';
           });
           const nameLabel = document.querySelector('label[for="full-name"]');
-          if(nameLabel) nameLabel.textContent = "Full Name";
+          if (nameLabel) nameLabel.textContent = 'Full Name';
           const emailLabel = document.querySelector('label[for="email"]');
-          if(emailLabel) emailLabel.textContent = "Email ID";
+          if (emailLabel) emailLabel.textContent = 'Email ID';
         }
 
         step1?.classList.remove('active');
@@ -365,279 +364,179 @@
       step1?.classList.add('active');
     });
 
-    // Step 2: Proceed to Payment
-    form?.addEventListener('submit', (e) => {
+    // ── Step 2: Form Submission → Create Zoho Payment Link ─────────────────────
+    form?.addEventListener('submit', async (e) => {
       e.preventDefault();
-      
-      // Store current form data
+
+      const submitBtn = form?.querySelector('.submit-btn') as HTMLButtonElement;
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Generating link…'; }
+
+      // Collect form data
       registrationData = {
-        fullName: (document.getElementById('full-name') as HTMLInputElement).value,
-        email: (document.getElementById('email') as HTMLInputElement).value,
-        phone: (document.getElementById('phone') as HTMLInputElement).value,
-        college: (document.getElementById('college') as HTMLInputElement).value,
-        department: (document.getElementById('dept') as HTMLInputElement).value,
+        name: (document.getElementById('full-name') as HTMLInputElement).value.trim(),
+        email: (document.getElementById('email') as HTMLInputElement).value.trim(),
+        phone: (document.getElementById('phone') as HTMLInputElement).value.trim(),
+        college: (document.getElementById('college') as HTMLInputElement).value.trim(),
+        department: (document.getElementById('dept') as HTMLInputElement).value.trim(),
         year: (document.getElementById('year') as HTMLSelectElement).value,
-        track: (document.getElementById('track') as HTMLSelectElement).value,
-        projectName: (document.getElementById('project-name') as HTMLInputElement).value,
-        teamName: registrationType === 'team' ? (document.getElementById('team-name') as HTMLInputElement).value : '',
-        members: [
-          (document.getElementById('member-2') as HTMLInputElement).value,
-          (document.getElementById('member-3') as HTMLInputElement).value,
-          (document.getElementById('member-4') as HTMLInputElement).value
-        ]
+        project_track: (document.getElementById('track') as HTMLSelectElement).value,
+        project_name: (document.getElementById('project-name') as HTMLInputElement).value.trim(),
+        registration_type: registrationType,
+        team_name: registrationType === 'team' ? (document.getElementById('team-name') as HTMLInputElement).value.trim() : null,
+        member_2: (document.getElementById('member-2') as HTMLInputElement).value.trim() || null,
+        member_3: (document.getElementById('member-3') as HTMLInputElement).value.trim() || null,
+        member_4: (document.getElementById('member-4') as HTMLInputElement).value.trim() || null,
       };
 
-      // Set Amount and QR based on Type
-      const amount = registrationType === 'team' ? '999' : '299';
-      if (displayAmount) displayAmount.textContent = `₹${amount}`;
-      if (qrImage) qrImage.src = `/${amount}.jpeg`;
-      
-      // Also pre-fill step 4 team name
-      const confirmTeamName = document.getElementById('confirm-team-name') as HTMLInputElement;
-      if (confirmTeamName) confirmTeamName.value = registrationData.teamName || registrationData.fullName;
+      // Amount: Defined in .env
+      const amount = registrationType === 'team' ? teamAmt : individualAmt;
 
-      // Transition to Payment QR Step
-      startPaymentFlow();
-    });
-
-    function startPaymentFlow() {
+      // Move to Step 3 showing generating state
       step2?.classList.remove('active');
       step3?.classList.add('active');
-      startTimer();
-    }
+      showPaymentGenerating();
 
-    function startTimer() {
-      stopTimer();
-      timeLeft = 300;
-      updateTimerDisplay();
-      if(timerExpiredMsg) timerExpiredMsg.style.display = 'none';
-      if(ivePaidBtn) (ivePaidBtn as HTMLButtonElement).disabled = false;
-      
-      paymentTimer = setInterval(() => {
-        timeLeft--;
-        updateTimerDisplay();
-        if (timeLeft <= 0) {
-          expireTimer();
+      try {
+        // Call zoho-payment edge function
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/zoho-payment`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+            'apikey': SUPABASE_ANON_KEY,
+          },
+          body: JSON.stringify({
+            action: 'create-link',
+            ...registrationData,
+            amount,
+          }),
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || result.error) {
+          throw new Error(result.error || result.hint || `Server error ${response.status}`);
         }
-      }, 1000);
-    }
 
-    function stopTimer() {
-      if (paymentTimer) clearInterval(paymentTimer);
-      paymentTimer = null;
-    }
+        if (!result.payment_url) {
+          throw new Error('Payment URL not returned. Check edge function logs.');
+        }
 
-    function updateTimerDisplay() {
-      const minutes = Math.floor(timeLeft / 60);
-      const seconds = timeLeft % 60;
-      if (paymentTimerDisplay) {
-        paymentTimerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        // Store the payment URL
+        zohoPaymentUrl = result.payment_url;
+
+        // Show the payment details card
+        showPaymentDetailsCard(registrationData, amount);
+
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Proceed to Payment'; }
+
+      } catch (err: any) {
+        showPaymentError(err.message || 'Unable to create payment link. Please try again.');
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Proceed to Payment'; }
       }
-    }
+    });
 
-    function expireTimer() {
-      stopTimer();
-      if (timerExpiredMsg) timerExpiredMsg.style.display = 'block';
-      if (ivePaidBtn) (ivePaidBtn as HTMLButtonElement).disabled = true;
-      if (completeRegBtn) completeRegBtn.disabled = true;
-    }
+    // ── Pay Now Button ─────────────────────────────────────────────────────────
+    payNowBtn?.addEventListener('click', () => {
+      if (!zohoPaymentUrl) return;
 
-    // Step 3 Actions
-    retryPaymentBtn?.addEventListener('click', startTimer);
-    cancelPaymentBtn?.addEventListener('click', () => {
-      stopTimer();
+      // Show loading state on button
+      if (payBtnText) payBtnText.style.display = 'none';
+      if (payBtnSpinner) payBtnSpinner.style.display = 'inline-block';
+      if (payNowBtn) {
+        payNowBtn.disabled = true;
+        payNowBtn.style.opacity = '0.8';
+      }
+
+      // Small delay for visual feedback, then redirect
+      setTimeout(() => {
+        window.location.href = zohoPaymentUrl;
+      }, 800);
+    });
+
+    // ── Back to form from payment details ──────────────────────────────────────
+    backToFormBtn?.addEventListener('click', () => {
+      zohoPaymentUrl = '';
       step3?.classList.remove('active');
       step2?.classList.add('active');
     });
 
-    ivePaidBtn?.addEventListener('click', () => {
+    // ── UI State Helpers ───────────────────────────────────────────────────────
+    function showPaymentGenerating() {
+      if (paymentGenerating) paymentGenerating.style.display = 'block';
+      if (paymentDetails) paymentDetails.style.display = 'none';
+      if (paymentError) paymentError.style.display = 'none';
+    }
+
+    function showPaymentDetailsCard(data: any, amount: number) {
+      // Populate card info
+      const nameEl = document.getElementById('pay-name');
+      const emailEl = document.getElementById('pay-email');
+      const typeEl = document.getElementById('pay-type');
+      const amountEl = document.getElementById('pay-amount');
+      const badgeEl = document.getElementById('reg-type-badge');
+      const payBtnTextEl = document.getElementById('pay-btn-text');
+      const paySpinnerEl = document.getElementById('pay-btn-spinner');
+      const payBtn = document.getElementById('pay-now-btn') as HTMLButtonElement;
+
+      if (nameEl) nameEl.textContent = data.team_name || data.name || '—';
+      if (emailEl) emailEl.textContent = data.email || '—';
+
+      const typeLabel = data.registration_type === 'team' ? 'Team' : 'Individual';
+      if (typeEl) typeEl.textContent = typeLabel;
+      if (badgeEl) {
+        badgeEl.textContent = typeLabel;
+        badgeEl.className = `reg-badge ${data.registration_type === 'team' ? 'team-badge' : 'ind-badge'}`;
+      }
+      if (amountEl) amountEl.textContent = `₹${amount}.00`;
+      if (payBtnTextEl) { payBtnTextEl.textContent = `Pay ₹${amount} →`; payBtnTextEl.style.display = 'inline'; }
+      if (paySpinnerEl) paySpinnerEl.style.display = 'none';
+      if (payBtn) { payBtn.disabled = false; payBtn.style.opacity = '1'; }
+
+      if (paymentGenerating) paymentGenerating.style.display = 'none';
+      if (paymentDetails) paymentDetails.style.display = 'block';
+      if (paymentError) paymentError.style.display = 'none';
+    }
+
+    function showPaymentError(msg: string) {
+      if (paymentErrorMsg) paymentErrorMsg.textContent = msg;
+      if (paymentGenerating) paymentGenerating.style.display = 'none';
+      if (paymentDetails) paymentDetails.style.display = 'none';
+      if (paymentError) paymentError.style.display = 'block';
+    }
+
+    // ── Retry: Go back to form ─────────────────────────────────────────────────
+    retryPaymentBtn?.addEventListener('click', () => {
+      zohoPaymentUrl = '';
       step3?.classList.remove('active');
-      step4?.classList.add('active');
+      step2?.classList.add('active');
     });
 
-    // Step 4 Actions
-    backToQrBtn?.addEventListener('click', () => {
-      step4?.classList.remove('active');
-      step3?.classList.add('active');
-    });
-
-    // Form Validation for Step 4
-    const validatePaymentForm = () => {
-      const txId = (document.getElementById('transaction-id') as HTMLInputElement).value.trim();
-      const teamName = (document.getElementById('confirm-team-name') as HTMLInputElement).value.trim();
-      const phone = (document.getElementById('payer-phone') as HTMLInputElement).value.trim();
-      const isValid = txId !== '' && teamName !== '' && /^[0-9]{10}$/.test(phone) && timeLeft > 0;
-      if (completeRegBtn) completeRegBtn.disabled = !isValid;
-    };
-
-    paymentForm?.addEventListener('input', validatePaymentForm);
-
-    paymentForm?.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      if (completeRegBtn) {
-        completeRegBtn.disabled = true;
-        completeRegBtn.textContent = 'Verifying...';
-      }
-
-      try {
-        const { supabase } = await import('../../lib/supabase');
-        
-        let uniqueCode = '';
-        const randomStr = () => Math.random().toString(36).substring(2, 7).toUpperCase();
-        let isUnique = false;
-        let attempts = 0;
-        
-        while(!isUnique && attempts < 5) {
-          uniqueCode = registrationType === 'team' ? `TEAM-2026-${randomStr()}` : `IND-2026-${randomStr()}`;
-          const { data, error } = await supabase.from('registrations').select('id').eq('generated_code', uniqueCode);
-          if (error) throw error;
-          if (data && data.length === 0) isUnique = true;
-          attempts++;
-        }
-
-        const insertData = {
-          registration_type: registrationType,
-          generated_code: uniqueCode,
-          college: registrationData.college,
-          department: registrationData.department,
-          year_of_study: parseInt(registrationData.year),
-          track: registrationData.track,
-          project_name: registrationData.projectName,
-          full_name: registrationData.fullName,
-          email: registrationData.email,
-          phone: registrationData.phone,
-          team_name: registrationData.teamName || null,
-          team_leader_name: registrationData.fullName,
-          leader_email: registrationData.email,
-          leader_phone: registrationData.phone,
-          member_2_name: registrationData.members[0] || null,
-          member_3_name: registrationData.members[1] || null,
-          member_4_name: registrationData.members[2] || null,
-          transaction_id: (document.getElementById('transaction-id') as HTMLInputElement).value.trim(),
-          payer_phone: (document.getElementById('payer-phone') as HTMLInputElement).value.trim(),
-          payment_status: 'Paid',
-          amount: registrationType === 'team' ? 999 : 299
-        };
-
-        const { error: insertError } = await supabase.from('registrations').insert([insertData]);
-        if (insertError) throw insertError;
-
-        // Trigger Confirmation Email
-        try {
-          supabase.functions.invoke('send-confirmation-email', {
-            body: {
-              name: registrationData.teamName || registrationData.fullName,
-              email: registrationData.email,
-              unique_code: uniqueCode
-            }
-          });
-        } catch (emailErr) {}
-
-        // Success transition
-        stopTimer();
-        const finalCodeDisplay = document.getElementById('final-generated-code');
-        if (finalCodeDisplay) finalCodeDisplay.textContent = uniqueCode;
-        
-        step4?.classList.remove('active');
-        step5?.classList.add('active');
-
-      } catch (err: any) {
-        alert(`Registration failed: ${err.message || 'Unexpected error'}. Please try again.`);
-        if (completeRegBtn) {
-          completeRegBtn.disabled = false;
-          completeRegBtn.textContent = 'Complete Registration';
-        }
-      }
-    });
-
-    // Invoice Generation
-    downloadInvoiceBtn?.addEventListener('click', async () => {
-      const { jsPDF } = await import('jspdf');
-      const doc = new jsPDF();
-      const invoiceId = `INV-${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
-      const now = new Date();
-      
-      // Design Constants
-      const primaryColor = [37, 99, 235];
-      const grayColor = [100, 116, 139];
-      
-      // Header
-      doc.setFontSize(22);
-      doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-      doc.text('Unai Tech', 105, 25, { align: 'center' });
-      
-      doc.setFontSize(10);
-      doc.setTextColor(grayColor[0], grayColor[1], grayColor[2]);
-      doc.text('Payment Received Successfully', 105, 32, { align: 'center' });
-
-      // Badge/Line
-      doc.setDrawColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-      doc.setLineWidth(0.5);
-      doc.line(20, 40, 190, 40);
-
-      // Invoice Details
-      doc.setTextColor(0, 0, 0);
-      doc.setFontSize(11);
-      doc.text(`Invoice ID: ${invoiceId}`, 20, 55);
-      doc.text(`Date & Time: ${now.toLocaleString()}`, 20, 62);
-      doc.text(`Status: Paid`, 20, 69);
-
-      // Registration Details
-      doc.setFontSize(14);
-      doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-      doc.text('Details', 20, 85);
-      
-      doc.setTextColor(0, 0, 0);
-      doc.setFontSize(11);
-      doc.text(`Registration Type: ${registrationType.charAt(0).toUpperCase() + registrationType.slice(1)}`, 20, 95);
-      doc.text(`Team Name: ${registrationData.teamName || registrationData.fullName}`, 20, 102);
-      doc.text(`Amount Paid: ₹${registrationType === 'team' ? '999' : '299'}`, 20, 109);
-      doc.text(`Transaction ID: ${(document.getElementById('transaction-id') as HTMLInputElement).value}`, 20, 116);
-      doc.text(`Payer Phone: ${(document.getElementById('payer-phone') as HTMLInputElement).value}`, 20, 123);
-      doc.text(`Participant Code: ${document.getElementById('final-generated-code')?.textContent || 'N/A'}`, 20, 130);
-
-      // Footer
-      doc.setDrawColor(226, 232, 240);
-      doc.line(20, 260, 190, 260);
-      doc.setFontSize(9);
-      doc.setTextColor(grayColor[0], grayColor[1], grayColor[2]);
-      doc.text('This is a computer-generated invoice. No signature required.', 105, 270, { align: 'center' });
-      doc.text('Thank you for participating!', 105, 275, { align: 'center' });
-
-      doc.save(`${invoiceId}.pdf`);
-    });
-
+    // ── Reset Form ─────────────────────────────────────────────────────────────
     function resetForm() {
-      stopTimer();
+      zohoPaymentUrl = '';
       step1?.classList.add('active');
       step2?.classList.remove('active');
       step3?.classList.remove('active');
-      step4?.classList.remove('active');
-      step5?.classList.remove('active');
-      
-      const formElements = form?.elements;
-      if(formElements) {
-          for(let i=0; i<formElements.length; i++) {
-              (formElements[i] as HTMLInputElement).disabled = false;
-          }
-      }
+
       const submitBtn = form?.querySelector('.submit-btn') as HTMLButtonElement;
       if (submitBtn) {
-          submitBtn.style.display = 'block';
-          submitBtn.textContent = 'Proceed to Payment';
-          submitBtn.disabled = false;
+        submitBtn.style.display = 'block';
+        submitBtn.textContent = 'Proceed to Payment';
+        submitBtn.disabled = false;
       }
-      
+
+      const formElements = form?.elements;
+      if (formElements) {
+        for (let i = 0; i < formElements.length; i++) {
+          (formElements[i] as HTMLInputElement).disabled = false;
+        }
+      }
+
       // @ts-ignore
       form?.reset();
-      paymentForm?.reset();
-      if(completeRegBtn) {
-        completeRegBtn.disabled = true;
-        completeRegBtn.textContent = 'Complete Registration';
-      }
     }
   });
-
 </script>
 
 <style>
@@ -697,16 +596,9 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  .modal-content::-webkit-scrollbar {
-    width: 6px;
-  }
-  .modal-content::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  .modal-content::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 10px;
-  }
+  .modal-content::-webkit-scrollbar { width: 6px; }
+  .modal-content::-webkit-scrollbar-track { background: transparent; }
+  .modal-content::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
 
   .modal[data-open="true"] .modal-content {
     transform: translateY(0);
@@ -751,33 +643,21 @@
     transition: all 0.2s;
   }
 
-  .tab-btn:hover {
-    background: #f1f5f9;
-  }
-
-  .tab-btn:active {
-    transform: scale(0.95);
-  }
-
+  .tab-btn:hover { background: #f1f5f9; }
+  .tab-btn:active { transform: scale(0.95); }
   .tab-btn.active {
     color: var(--color-s-primary, #2563eb);
     background: #eff6ff;
     transform: scale(1.05);
   }
 
-  .tab-content {
+  .tab-content { display: none; animation: fadeIn 0.4s; }
+  .tab-content.active { display: block; }
+
+  .step {
     display: none;
     animation: fadeIn 0.4s;
-  }
-  
-  .tab-content.active {
-    display: block;
-  }
-
-  .step { 
-    display: none; 
-    animation: fadeIn 0.4s; 
-    padding-bottom: 2rem; /* Ensure last elements are fully scrollable on mobile */
+    padding-bottom: 2rem;
   }
   .step.active { display: block; }
 
@@ -806,9 +686,7 @@
     border-color: var(--color-s-primary, #2563eb);
     background: #e0f2fe;
   }
-  .type-btn:active {
-    transform: scale(0.98);
-  }
+  .type-btn:active { transform: scale(0.98); }
   .icon { font-size: 3rem; display: block; margin-bottom: 1rem; }
 
   .form-grid {
@@ -839,7 +717,10 @@
   label { font-size: 0.875rem; font-weight: 500; color: #475569; }
   input, select {
     padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; background: #f8fafc;
-    font-size: 16px; /* Prevents iOS auto-zoom on focus */
+    font-size: 16px;
+    font-family: inherit;
+    width: 100%;
+    box-sizing: border-box;
   }
   input:focus, select:focus {
     outline: none; border-color: var(--color-s-primary, #2563eb);
@@ -849,7 +730,7 @@
     opacity: 0.7; cursor: not-allowed; background: #e2e8f0;
   }
 
-  button:active, .submit-btn:active, .back-btn:active, .cancel-btn:active, .whatsapp-btn:active, .invoice-btn:active, .retry-btn:active {
+  button:active, .submit-btn:active, .back-btn:active, .cancel-btn:active, .retry-btn:active {
     transform: scale(0.98);
     opacity: 0.9;
   }
@@ -858,6 +739,7 @@
   .submit-btn {
     background: var(--color-s-primary, #2563eb); color: white; border: none;
     padding: 0.75rem 2rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer;
+    font-size: 1rem;
     transition: opacity 0.2s;
   }
   .submit-btn:hover { opacity: 0.9; }
@@ -870,90 +752,198 @@
   }
   .back-btn:hover { background: #f8fafc; border-color: var(--color-s-primary, #2563eb); }
 
-  /* Success Step */
-  /* Payment Card Styles */
-  .payment-card {
+  /* ── Step 3: Payment States ─────────────────────────────────────────────── */
+  .payment-state-card {
     background: #f8fafc;
     border: 1px solid #e2e8f0;
     border-radius: 1.5rem;
-    padding: 2rem;
-    position: relative;
-    overflow: hidden;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    padding: 2rem 1.75rem;
     text-align: center;
+    animation: fadeIn 0.4s ease;
   }
 
-  .timer-badge {
-    position: absolute;
-    top: 1rem;
-    right: 1.5rem;
-    background: #fee2e2;
-    color: #ef4444;
-    padding: 0.5rem 1rem;
-    border-radius: 2rem;
-    font-weight: 700;
-    font-size: 0.9rem;
+  /* Generating spinner */
+  .payment-spinner {
+    width: 56px;
+    height: 56px;
+    border: 5px solid #e2e8f0;
+    border-top-color: var(--color-s-primary, #2563eb);
+    border-radius: 50%;
+    animation: spin 0.9s linear infinite;
+    margin: 0 auto;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Payment Details Card */
+  .payment-header {
     display: flex;
+    flex-direction: column;
     align-items: center;
     gap: 0.5rem;
-    border: 1px solid #fecaca;
-  }
-
-  .payment-card h2 {
-    font-size: 1.5rem;
-    margin-top: 1rem;
-    color: #0f172a;
-  }
-
-  .qr-container {
-    background: white;
-    width: 200px;
-    height: 200px;
-    margin: 1.5rem auto;
-    padding: 0.5rem;
-    border-radius: 1rem;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border: 1px solid #f1f5f9;
-  }
-
-  .qr-container img {
-    max-width: 100%;
-    border-radius: 0.5rem;
-  }
-
-  .amount-display {
-    font-size: 2rem;
-    font-weight: 800;
-    color: var(--color-s-primary, #2563eb);
-    margin: 1rem 0;
-  }
-
-  .payment-instructions {
-    font-size: 0.9rem;
-    color: #64748b;
-    line-height: 1.5;
     margin-bottom: 1.5rem;
   }
 
-  .reveal-animation {
-    animation: revealScale 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  .payment-logo {
+    font-size: 3rem;
+    line-height: 1;
   }
 
-  @keyframes revealScale {
-    0% { opacity: 0; transform: scale(0.9) translateY(20px); }
-    100% { opacity: 1; transform: scale(1) translateY(0); }
+  .payment-header h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
   }
 
-  .error-msg {
-    margin: 1.5rem 0;
-    padding: 1rem;
-    background: #fff1f2;
-    border: 1px solid #fda4af;
+  .reg-badge {
+    display: inline-block;
+    padding: 0.25rem 0.85rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .ind-badge { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
+  .team-badge { background: #fdf4ff; color: #9333ea; border: 1px solid #e9d5ff; }
+
+  /* Summary rows */
+  .payment-summary {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 1rem;
+    padding: 1rem 1.25rem;
+    margin: 0 0 1.25rem;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+  }
+
+  .summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .summary-label {
+    font-size: 0.82rem;
+    color: #94a3b8;
+    font-weight: 500;
+  }
+
+  .summary-value {
+    font-size: 0.9rem;
+    color: #0f172a;
+    font-weight: 600;
+    text-align: right;
+    max-width: 60%;
+    word-break: break-word;
+  }
+
+  /* Amount Box */
+  .amount-box {
+    background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+    border-radius: 1rem;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.5rem;
+    color: white;
+  }
+
+  .amount-label {
+    font-size: 0.82rem;
+    opacity: 0.85;
+    font-weight: 500;
+    margin-bottom: 0.4rem;
+  }
+
+  .amount-value {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  .amount-value #pay-amount {
+    font-size: 2.5rem;
+    font-weight: 800;
+    letter-spacing: -1px;
+  }
+
+  .amount-sub {
+    font-size: 0.82rem;
+    opacity: 0.75;
+  }
+
+  /* Pay Button */
+  .pay-btn {
+    width: 100%;
+    background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
     border-radius: 0.75rem;
-    color: #be123c;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 54px;
+  }
+
+  .pay-btn:hover:not(:disabled) {
+    opacity: 0.92;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.5);
+  }
+
+  .pay-btn:active { transform: scale(0.98); }
+  .pay-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+
+  /* Spinner inside Pay button */
+  .pay-spinner {
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255,255,255,0.35);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.75s linear infinite;
+    flex-shrink: 0;
+  }
+
+  .secure-note {
+    font-size: 0.78rem;
+    color: #94a3b8;
+    margin: 0.75rem 0 1rem;
+  }
+
+  .back-to-form-btn {
+    background: transparent;
+    color: #64748b;
+    border: none;
+    font-size: 0.88rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .back-to-form-btn:hover { color: #2563eb; }
+
+  /* Error state */
+  .error-hint {
+    background: #fff7ed;
+    border: 1px solid #fed7aa;
+    border-radius: 0.75rem;
+    padding: 1rem;
+    text-align: left;
+    margin-bottom: 1.5rem;
+    font-size: 0.85rem;
+    color: #92400e;
   }
 
   .retry-btn {
@@ -961,123 +951,11 @@
     background: #ef4444;
     color: white;
     border: none;
-    padding: 0.5rem 1.5rem;
+    padding: 0.65rem 1.5rem;
     border-radius: 0.5rem;
     font-weight: 600;
     cursor: pointer;
-  }
-
-  .cancel-btn {
-    background: white;
-    color: #64748b;
-    border: 1px solid #e2e8f0;
-    padding: 0.75rem 1.5rem;
-    border-radius: 0.5rem;
-    font-weight: 600;
-    cursor: pointer;
-  }
-
-  .cancel-btn:hover {
-    background: #f1f5f9;
-  }
-
-  /* Success Action Card */
-  .action-card {
-    background: #f0f9ff;
-    border: 1px solid #bae6fd;
-    border-radius: 1rem;
-    padding: 1.5rem;
-    margin-top: 2rem;
-    text-align: left;
-  }
-
-  .action-card h3 {
-    font-size: 1.1rem;
-    color: #0369a1;
-    margin-bottom: 0.5rem;
-  }
-
-  .action-card p {
-    font-size: 0.9rem;
-    color: #0c4a6e;
-    margin-bottom: 1rem;
-  }
-
-  .action-buttons {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .whatsapp-btn {
-    background: #25d366;
-    color: white;
-    text-decoration: none;
-    padding: 0.75rem 1.5rem;
-    border-radius: 0.5rem;
-    font-weight: 700;
-    text-align: center;
-    transition: transform 0.2s;
-  }
-
-  .whatsapp-btn:hover {
-    transform: translateY(-2px);
-    background: #22c55e;
-  }
-
-  .invoice-btn {
-    background: white;
-    color: #0369a1;
-    border: 1px solid #bae6fd;
-    padding: 0.75rem 1.5rem;
-    border-radius: 0.5rem;
-    font-weight: 600;
-    cursor: pointer;
-  }
-
-  .invoice-btn:hover {
-    background: #e0f2fe;
-  }
-
-  .done-btn {
-    background: #1e293b;
-    color: white;
-    border: none;
-    padding: 0.75rem 2.5rem;
-    border-radius: 0.5rem;
-    font-weight: 600;
-    cursor: pointer;
-  }
-
-  .success-icon {
-    font-size: 4rem; animation: bounce 1s;
-  }
-  .code-box {
-    margin: 1rem auto;
-    padding: 1.25rem;
-    background: #f1f5f9;
-    border: 2px dashed #94a3b8;
-    border-radius: 0.75rem;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1rem;
-    max-width: 400px;
-  }
-  #generated-code-display {
-    font-size: 1.5rem;
-    font-weight: 700;
-    letter-spacing: 2px;
-    color: #0f172a;
-  }
-  .copy-btn {
-    background: white; border: 1px solid #cbd5e1; padding: 0.5rem 1rem;
-    border-radius: 0.5rem; cursor: pointer; font-weight: 600; transition: all 0.2s;
-  }
-  .copy-btn:hover { background: #f8fafc; border-color: var(--color-s-primary, #2563eb); }
-  .done-btn {
-    background: #0f172a; color: white; border: none; padding: 0.75rem 2.5rem;
-    border-radius: 0.5rem; font-weight: 600; cursor: pointer;
+    font-size: 0.95rem;
   }
 
   /* Lookup Section */
@@ -1098,12 +976,6 @@
     text-transform: uppercase;
   }
 
-  @keyframes bounce {
-    0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-    40% { transform: translateY(-20px); }
-    60% { transform: translateY(-10px); }
-  }
-
   @media (max-width: 640px) {
     .options { grid-template-columns: 1fr; }
     .form-grid { grid-template-columns: 1fr; }
@@ -1114,5 +986,6 @@
     .lookup-form { flex-direction: column; }
     .lookup-input { width: 100%; }
     .modal-tabs { flex-direction: column; }
+    .amount-value #pay-amount { font-size: 2rem; }
   }
 </style>

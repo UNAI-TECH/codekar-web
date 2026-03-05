@@ -1,0 +1,16 @@
+
+[functions.zoho-payment]
+enabled = true
+verify_jwt = false
+
+[functions.verify-zoho-payment]
+enabled = true
+verify_jwt = false
+
+[functions.webhook-zoho]
+enabled = true
+verify_jwt = false
+
+[functions.send-confirmation-email]
+enabled = true
+verify_jwt = false

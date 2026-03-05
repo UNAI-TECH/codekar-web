@@ -4,14 +4,7 @@
   <div class="hero-content">
     <p class="subtitle">UNAI TECH PRESENTS</p>
     <h1 class="hero-title">
-      <span class="letter letter-black">C</span>
-      <span class="letter letter-black">O</span>
-      <span class="letter letter-black">D</span>
-      <span class="letter letter-black">E</span>
-      <span class="letter letter-blue">K</span>
-      <span class="letter letter-blue">A</span>
-      <span class="letter letter-blue">R</span>
-      <span class="letter letter-blue">X</span>
+      <img src="/codekarX.png" alt="CODEKARX" class="hero-title-img" />
     </h1>
     <p class="tagline">Build. Innovate. Transform.</p>
   </div>
@@ -48,38 +41,19 @@
   }
 
   .hero-title {
-    font-size: clamp(3rem, 10vw, 8rem);
-    font-weight: 900;
-    letter-spacing: -0.05em;
     margin-bottom: 1.5rem;
     display: flex;
-    gap: 0.1em;
     justify-content: center;
+    align-items: center;
   }
 
-  .letter {
-    display: inline-block;
+  .hero-title-img {
+    height: clamp(6rem, 24vw, 50rem);
+    width: auto;
+    display: block;
+    object-fit: contain;
     animation: float 3s ease-in-out infinite;
   }
-
-  .letter-black {
-    color: var(--color-s-primary-dark);
-  }
-
-  .letter-blue {
-    background: linear-gradient(135deg, var(--color-s-gradient-start) 0%, var(--color-s-gradient-end) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
-
-  .letter:nth-child(1) { animation-delay: 0s; }
-  .letter:nth-child(2) { animation-delay: 0.1s; }
-  .letter:nth-child(3) { animation-delay: 0.2s; }
-  .letter:nth-child(4) { animation-delay: 0.3s; }
-  .letter:nth-child(5) { animation-delay: 0.4s; }
-  .letter:nth-child(6) { animation-delay: 0.5s; }
-  .letter:nth-child(7) { animation-delay: 0.6s; }
-  .letter:nth-child(8) { animation-delay: 0.7s; }
 
   @keyframes float {
     0%, 100% { transform: translateY(0px); }

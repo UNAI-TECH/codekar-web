@@ -1,0 +1,217 @@
+---
+import Layout from '../layouts/Layout.astro';
+const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+---
+
+<Layout title="Payment Failed — CODEKARX" hideCTA={true}>
+  <div class="payment-page">
+    <!-- Verifying State -->
+    <div id="verifying-state" class="state-card">
+      <div class="spinner"></div>
+      <h1>Checking Payment…</h1>
+      <p>Please wait while we check the payment status.</p>
+    </div>
+
+    <!-- Failed State -->
+    <div id="failed-state" class="state-card hidden">
+      <div class="failed-icon">❌</div>
+      <h1>Payment Failed</h1>
+      <p class="subtitle">Your payment was not completed or was cancelled.</p>
+
+      <div class="info-box">
+        <p>Don't worry — <strong>no money has been charged</strong>. Your registration slot is still open.</p>
+        <p id="reg-id-text" class="reg-id"></p>
+      </div>
+
+      <div class="action-buttons">
+        <button id="try-again-btn" class="try-again-btn">🔄 Try Again</button>
+        <a href="/" class="home-link">← Back to Home</a>
+      </div>
+    </div>
+
+    <!-- Unexpected / Still Pending State -->
+    <div id="pending-state" class="state-card hidden">
+      <div class="pending-icon">⏳</div>
+      <h1>Status Unknown</h1>
+      <p>We couldn't confirm the payment status. If money was deducted, contact support.</p>
+      <div id="support-id" class="reg-id-box"></div>
+      <a href="/" class="home-link">← Back to Home</a>
+    </div>
+  </div>
+</Layout>
+
+<script define:vars={{ supabaseUrl, supabaseAnonKey }}>
+  const SUPABASE_URL = supabaseUrl;
+  const SUPABASE_ANON_KEY = supabaseAnonKey;
+
+  const verifyingState = document.getElementById('verifying-state');
+  const failedState = document.getElementById('failed-state');
+  const pendingState = document.getElementById('pending-state');
+
+  function showState(id) {
+    [verifyingState, failedState, pendingState].forEach(el => el?.classList.add('hidden'));
+    document.getElementById(id)?.classList.remove('hidden');
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  const registrationId = params.get('registration_id');
+
+  async function checkStatus() {
+    if (!registrationId) {
+      showState('failed-state');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/verify-zoho-payment`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'apikey': SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({ registration_id: registrationId }),
+      });
+
+      const result = await response.json();
+      console.log('Verify result:', result);
+
+      if (result.status === 'paid') {
+        // Edge case: user cancelled but payment actually went through — redirect to success
+        window.location.href = `/payment-success?registration_id=${registrationId}`;
+        return;
+      }
+
+      // Failed / cancelled / pending
+      document.getElementById('reg-id-text').textContent = `Reference ID: ${registrationId}`;
+      document.getElementById('support-id').textContent = `Reference ID: ${registrationId}`;
+      showState('failed-state');
+
+    } catch (err) {
+      console.error('Check status error:', err);
+      showState('pending-state');
+      if (registrationId) {
+        document.getElementById('support-id').textContent = `Reference ID: ${registrationId}`;
+      }
+    }
+  }
+
+  checkStatus();
+
+  // Try Again — reopen registration modal on home page
+  document.getElementById('try-again-btn')?.addEventListener('click', () => {
+    // Navigate back to homepage and open the modal
+    window.location.href = '/?openModal=true';
+  });
+</script>
+
+<style>
+  .payment-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #fff1f2 0%, #fef3f2 100%);
+    padding: 2rem 1rem;
+    font-family: 'Outfit', sans-serif;
+  }
+
+  .state-card {
+    background: white;
+    border-radius: 1.5rem;
+    padding: 2.5rem 2rem;
+    width: 100%;
+    max-width: 480px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+    text-align: center;
+    animation: fadeUp 0.4s ease;
+  }
+
+  .state-card.hidden { display: none; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .spinner {
+    width: 52px;
+    height: 52px;
+    border: 4px solid #e2e8f0;
+    border-top-color: #ef4444;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 1.5rem;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .failed-icon, .pending-icon { font-size: 3.5rem; margin-bottom: 1rem; }
+
+  h1 { font-size: 1.75rem; font-weight: 700; color: #1e293b; margin: 0 0 0.5rem; }
+  p { color: #64748b; }
+  .subtitle { margin-bottom: 1.5rem; }
+
+  .info-box {
+    background: #fff7ed;
+    border: 1px solid #fed7aa;
+    border-radius: 0.75rem;
+    padding: 1rem 1.25rem;
+    text-align: left;
+    margin: 1rem 0 1.5rem;
+    color: #92400e;
+    font-size: 0.9rem;
+  }
+
+  .reg-id {
+    font-family: monospace;
+    font-size: 0.8rem;
+    margin-top: 0.5rem;
+    opacity: 0.8;
+  }
+
+  .reg-id-box {
+    font-family: monospace;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.85rem;
+    color: #475569;
+    margin: 1rem auto;
+    word-break: break-all;
+  }
+
+  .action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 1rem;
+  }
+
+  .try-again-btn {
+    background: #ef4444;
+    color: white;
+    border: none;
+    padding: 0.9rem 2rem;
+    border-radius: 0.75rem;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s;
+  }
+  .try-again-btn:hover { background: #dc2626; transform: translateY(-1px); }
+
+  .home-link {
+    display: inline-block;
+    color: #64748b;
+    font-size: 0.9rem;
+    text-decoration: none;
+  }
+  .home-link:hover { color: #1e293b; }
+
+  @media (max-width: 500px) {
+    .state-card { padding: 2rem 1.25rem; }
+    h1 { font-size: 1.5rem; }
+  }
+</style>

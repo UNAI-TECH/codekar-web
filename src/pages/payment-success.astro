@@ -1,0 +1,413 @@
+---
+import Layout from '../layouts/Layout.astro';
+const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+---
+
+<Layout title="Payment Successful — CODEKARX" hideCTA={true}>
+  <div class="payment-page">
+    <!-- Verifying State -->
+    <div id="verifying-state" class="state-card">
+      <div class="spinner"></div>
+      <h1>Verifying Payment…</h1>
+      <p>Please wait while we confirm your payment securely.</p>
+    </div>
+
+    <!-- Success State -->
+    <div id="success-state" class="state-card hidden">
+      <div class="success-icon">🎉</div>
+      <h1>Payment Successful!</h1>
+      <p class="subtitle">Your registration for <strong>CODEKARX 2026</strong> is confirmed.</p>
+
+      <div class="code-card">
+        <small>Your Participation Code</small>
+        <div id="participation-code" class="code">IND-2026-XXXXX</div>
+        <button class="copy-btn" id="copy-code-btn">Copy Code</button>
+      </div>
+
+      <div class="info-grid">
+        <div class="info-item">
+          <span class="label">Name</span>
+          <span id="reg-name" class="value">—</span>
+        </div>
+        <div class="info-item">
+          <span class="label">Email</span>
+          <span id="reg-email" class="value">—</span>
+        </div>
+        <div class="info-item">
+          <span class="label">Amount Paid</span>
+          <span id="reg-amount" class="value">₹1</span>
+        </div>
+        <div class="info-item">
+          <span class="label">Status</span>
+          <span class="value status-paid">✅ Paid</span>
+        </div>
+      </div>
+
+      <div class="action-buttons">
+        <a
+          href="https://chat.whatsapp.com/G5v7tXGzX7z7z7z7z7z7"
+          target="_blank"
+          rel="noopener"
+          class="whatsapp-btn"
+        >
+          📱 Join WhatsApp Group
+        </a>
+        <button id="download-invoice-btn" class="invoice-btn">
+          📄 Download Invoice
+        </button>
+      </div>
+
+      <a href="/" class="home-link">← Back to Home</a>
+    </div>
+
+    <!-- Error / Pending State -->
+    <div id="pending-state" class="state-card hidden">
+      <div class="pending-icon">⏳</div>
+      <h1>Payment Pending</h1>
+      <p>We're waiting for payment confirmation from the gateway. This can take a few seconds.</p>
+      <button id="retry-verify-btn" class="retry-btn">🔄 Check Again</button>
+      <a href="/" class="home-link">← Back to Home</a>
+    </div>
+
+    <!-- Failed State -->
+    <div id="failed-redirect-state" class="state-card hidden">
+      <div class="failed-icon">❌</div>
+      <h1>Payment Not Confirmed</h1>
+      <p>We couldn't verify this payment. If money was deducted, contact support with your registration ID.</p>
+      <div id="reg-id-display" class="reg-id-box"></div>
+      <a href="/" class="retry-home-btn">Try Again</a>
+      <a href="/" class="home-link">← Back to Home</a>
+    </div>
+  </div>
+</Layout>
+
+<script define:vars={{ supabaseUrl, supabaseAnonKey }}>
+  const SUPABASE_URL = supabaseUrl;
+  const SUPABASE_ANON_KEY = supabaseAnonKey;
+
+  const verifyingState = document.getElementById('verifying-state');
+  const successState = document.getElementById('success-state');
+  const pendingState = document.getElementById('pending-state');
+  const failedRedirectState = document.getElementById('failed-redirect-state');
+
+  function showState(id) {
+    [verifyingState, successState, pendingState, failedRedirectState].forEach(el => el?.classList.add('hidden'));
+    document.getElementById(id)?.classList.remove('hidden');
+  }
+
+  let retryCount = 0;
+  const MAX_RETRIES = 5;
+  let registrationData = null;
+
+  async function verifyPayment(registrationId) {
+    try {
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/verify-zoho-payment`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'apikey': SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({ registration_id: registrationId }),
+      });
+
+      const result = await response.json();
+      console.log('Verify response:', result);
+      return result;
+    } catch (err) {
+      console.error('Verify error:', err);
+      return null;
+    }
+  }
+
+  function showSuccess(registration) {
+    registrationData = registration;
+    const code = registration.generated_code || 'N/A';
+    document.getElementById('participation-code').textContent = code;
+    document.getElementById('reg-name').textContent = registration.team_name || registration.full_name || registration.name || '—';
+    document.getElementById('reg-email').textContent = registration.email || '—';
+    document.getElementById('reg-amount').textContent = `₹${registration.amount || 1}`;
+    showState('success-state');
+  }
+
+  async function runVerification(registrationId) {
+    showState('verifying-state');
+    const result = await verifyPayment(registrationId);
+
+    if (!result) {
+      if (retryCount < MAX_RETRIES) {
+        retryCount++;
+        setTimeout(() => runVerification(registrationId), 3000);
+        return;
+      }
+      showState('pending-state');
+      return;
+    }
+
+    if (result.status === 'paid') {
+      showSuccess(result.registration);
+    } else if (result.status === 'failed') {
+      document.getElementById('reg-id-display').textContent = `Registration ID: ${registrationId}`;
+      showState('failed-redirect-state');
+    } else {
+      // pending — retry up to MAX_RETRIES times, then show pending state
+      if (retryCount < MAX_RETRIES) {
+        retryCount++;
+        setTimeout(() => runVerification(registrationId), 3000);
+      } else {
+        showState('pending-state');
+      }
+    }
+  }
+
+  // ── Init ──────────────────────────────────────────────────────────────────
+  const params = new URLSearchParams(window.location.search);
+  const registrationId = params.get('registration_id');
+
+  if (registrationId) {
+    runVerification(registrationId);
+  } else {
+    // No registration_id — show pending
+    showState('pending-state');
+  }
+
+  // Retry button
+  document.getElementById('retry-verify-btn')?.addEventListener('click', () => {
+    retryCount = 0;
+    if (registrationId) runVerification(registrationId);
+  });
+
+  // Copy Code
+  document.getElementById('copy-code-btn')?.addEventListener('click', () => {
+    const code = document.getElementById('participation-code')?.textContent;
+    if (code) {
+      navigator.clipboard.writeText(code).then(() => {
+        const btn = document.getElementById('copy-code-btn');
+        if (btn) { btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = 'Copy Code', 2000); }
+      });
+    }
+  });
+
+  // Download Invoice
+  document.getElementById('download-invoice-btn')?.addEventListener('click', async () => {
+    if (!registrationData) return;
+    const { jsPDF } = await import('jspdf');
+    const doc = new jsPDF();
+    const invoiceId = `INV-${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
+    const now = new Date();
+    const primary = [37, 99, 235];
+    const gray = [100, 116, 139];
+
+    doc.setFontSize(22);
+    doc.setTextColor(...primary);
+    doc.text('CODEKARX 2026 — Unai Tech', 105, 25, { align: 'center' });
+    doc.setFontSize(10);
+    doc.setTextColor(...gray);
+    doc.text('Payment Invoice', 105, 33, { align: 'center' });
+    doc.setDrawColor(...primary);
+    doc.setLineWidth(0.5);
+    doc.line(20, 40, 190, 40);
+
+    doc.setTextColor(0);
+    doc.setFontSize(11);
+    doc.text(`Invoice ID: ${invoiceId}`, 20, 52);
+    doc.text(`Date: ${now.toLocaleString('en-IN')}`, 20, 59);
+    doc.text(`Status: PAID`, 20, 66);
+
+    doc.setFontSize(14);
+    doc.setTextColor(...primary);
+    doc.text('Participant Details', 20, 80);
+
+    doc.setTextColor(0);
+    doc.setFontSize(11);
+    doc.text(`Name: ${registrationData.team_name || registrationData.name || 'N/A'}`, 20, 90);
+    doc.text(`Email: ${registrationData.email || 'N/A'}`, 20, 97);
+    doc.text(`Phone: ${registrationData.phone || 'N/A'}`, 20, 104);
+    doc.text(`College: ${registrationData.college || 'N/A'}`, 20, 111);
+    doc.text(`Track: ${registrationData.project_track || 'N/A'}`, 20, 118);
+    doc.text(`Project: ${registrationData.project_name || 'N/A'}`, 20, 125);
+    doc.text(`Amount Paid: ₹${registrationData.amount || 1}`, 20, 132);
+    doc.text(`Participation Code: ${registrationData.generated_code || 'N/A'}`, 20, 139);
+    doc.text(`Zoho Payment ID: ${registrationData.zoho_payment_id || 'N/A'}`, 20, 146);
+
+    doc.setDrawColor(226, 232, 240);
+    doc.line(20, 260, 190, 260);
+    doc.setFontSize(9);
+    doc.setTextColor(...gray);
+    doc.text('Computer-generated invoice. No signature required.', 105, 270, { align: 'center' });
+    doc.text('Thank you for participating in CODEKARX 2026!', 105, 276, { align: 'center' });
+
+    doc.save(`CODEKARX-${invoiceId}.pdf`);
+  });
+</script>
+
+<style>
+  .payment-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #f0f4ff 0%, #e8f5e9 100%);
+    padding: 2rem 1rem;
+    font-family: 'Outfit', sans-serif;
+  }
+
+  .state-card {
+    background: white;
+    border-radius: 1.5rem;
+    padding: 2.5rem 2rem;
+    width: 100%;
+    max-width: 520px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+    text-align: center;
+    animation: fadeUp 0.4s ease;
+  }
+
+  .state-card.hidden {
+    display: none;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Spinner */
+  .spinner {
+    width: 52px;
+    height: 52px;
+    border: 4px solid #e2e8f0;
+    border-top-color: #2563eb;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 1.5rem;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Icons */
+  .success-icon, .pending-icon, .failed-icon { font-size: 3.5rem; margin-bottom: 1rem; }
+
+  h1 { font-size: 1.75rem; font-weight: 700; color: #1e293b; margin: 0 0 0.5rem; }
+
+  .subtitle { color: #475569; margin-bottom: 1.5rem; }
+
+  /* Code Card */
+  .code-card {
+    background: linear-gradient(135deg, #2563eb, #7c3aed);
+    color: white;
+    border-radius: 1rem;
+    padding: 1.25rem 1.5rem;
+    margin: 1.5rem 0;
+  }
+  .code-card small { font-size: 0.8rem; opacity: 0.8; }
+  .code { font-size: 1.5rem; font-weight: 800; letter-spacing: 2px; margin: 0.5rem 0; }
+  .copy-btn {
+    background: rgba(255,255,255,0.2);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.4);
+    padding: 0.35rem 1rem;
+    border-radius: 999px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: background 0.2s;
+  }
+  .copy-btn:hover { background: rgba(255,255,255,0.35); }
+
+  /* Info Grid */
+  .info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    text-align: left;
+    margin: 1.25rem 0;
+  }
+  .info-item {
+    background: #f8fafc;
+    border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
+  }
+  .label { display: block; font-size: 0.75rem; color: #94a3b8; font-weight: 500; }
+  .value { display: block; font-size: 0.95rem; font-weight: 600; color: #1e293b; margin-top: 0.2rem; word-break: break-all; }
+  .status-paid { color: #10b981; }
+
+  /* Action Buttons */
+  .action-buttons { display: flex; flex-direction: column; gap: 0.75rem; margin: 1.5rem 0; }
+
+  .whatsapp-btn {
+    background: #25d366;
+    color: white;
+    padding: 0.85rem 1.5rem;
+    border-radius: 0.75rem;
+    font-weight: 600;
+    text-decoration: none;
+    display: block;
+    transition: background 0.2s, transform 0.15s;
+  }
+  .whatsapp-btn:hover { background: #1ebe5c; transform: translateY(-1px); }
+
+  .invoice-btn {
+    background: #f1f5f9;
+    color: #334155;
+    border: none;
+    padding: 0.85rem 1.5rem;
+    border-radius: 0.75rem;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .invoice-btn:hover { background: #e2e8f0; }
+
+  .home-link {
+    display: inline-block;
+    color: #64748b;
+    font-size: 0.9rem;
+    text-decoration: none;
+    margin-top: 1rem;
+  }
+  .home-link:hover { color: #2563eb; }
+
+  .retry-btn {
+    background: #2563eb;
+    color: white;
+    border: none;
+    padding: 0.85rem 2rem;
+    border-radius: 0.75rem;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 1rem;
+    transition: background 0.2s;
+  }
+  .retry-btn:hover { background: #1d4ed8; }
+
+  .reg-id-box {
+    font-family: monospace;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.85rem;
+    color: #475569;
+    margin: 1rem 0;
+    word-break: break-all;
+  }
+
+  .retry-home-btn {
+    display: inline-block;
+    background: #2563eb;
+    color: white;
+    padding: 0.85rem 2rem;
+    border-radius: 0.75rem;
+    font-weight: 600;
+    text-decoration: none;
+    margin-top: 1rem;
+  }
+
+  @media (max-width: 500px) {
+    .state-card { padding: 2rem 1.25rem; }
+    .info-grid { grid-template-columns: 1fr; }
+    h1 { font-size: 1.5rem; }
+  }
+</style>

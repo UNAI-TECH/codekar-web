@@ -3,5 +3,9 @@
         "codekar Docs": {
             "url": "https://gitmcp.io/AK26creator/codekar"
         }
-    }
+    },
+    "deno.enablePaths": [
+        "supabase/functions"
+    ],
+    "deno.enable": false
 }
