@@ -231,8 +231,18 @@ const INDIVIDUAL_AMOUNT = import.meta.env.INDIVIDUAL_REGISTRATION_AMOUNT || 299;
         <p id="lookup-error" style="color: #ef4444; margin-top: 1rem; display: none;">Invalid Code. Please check and try again.</p>
       </div>
     </div>
+    <!-- SUCCESS / REDIRECTING FLOW -->
+    <div id="payment-success" class="tab-content">
+       <div class="payment-state-card">
+          <div style="font-size:3rem;">✅</div>
+          <h2 style="color:#22c55e; margin-top:1rem;">Payment Successful!</h2>
+          <p>Your registration is being confirmed. Redirecting you to the success page...</p>
+       </div>
+    </div>
   </div>
 </div>
+
+<script src="https://js.zoho.in/v1/zpayments.js" is:inline></script>
 
 <script>
   import { supabase } from '../../lib/supabase';
@@ -340,7 +350,8 @@ const INDIVIDUAL_AMOUNT = import.meta.env.INDIVIDUAL_REGISTRATION_AMOUNT || 299;
 
     let registrationType = 'individual';
     let registrationData: any = {};
-    let zohoPaymentUrl = '';
+    let paymentSessionId = '';
+    const ZOHO_API_KEY = (window as any).ZOHO_PAYMENTS_API_KEY || import.meta.env?.PUBLIC_ZOHO_PAYMENTS_API_KEY || '';
 
     // ── Scroll Lock ────────────────────────────────────────────────────────────
     if (modal) {
@@ -483,7 +494,7 @@ const INDIVIDUAL_AMOUNT = import.meta.env.INDIVIDUAL_REGISTRATION_AMOUNT || 299;
       showPaymentGenerating();
 
       try {
-        // Call zoho-payment-handler edge function
+        // Call zoho-payment-handler edge function to create a session
         const response = await fetch(`${SUPABASE_URL}/functions/v1/zoho-payment-handler`, {
           method: 'POST',
           headers: {
@@ -492,7 +503,7 @@ const INDIVIDUAL_AMOUNT = import.meta.env.INDIVIDUAL_REGISTRATION_AMOUNT || 299;
             'apikey': SUPABASE_ANON_KEY,
           },
           body: JSON.stringify({
-            action: 'create-link',
+            action: 'create-session',
             ...registrationData,
             amount,
           }),
@@ -504,12 +515,12 @@ const INDIVIDUAL_AMOUNT = import.meta.env.INDIVIDUAL_REGISTRATION_AMOUNT || 299;
           throw new Error(result.error || result.hint || `Server error ${response.status}`);
         }
 
-        if (!result.payment_url) {
-          throw new Error('Payment URL not returned. Check edge function logs.');
+        if (!result.payment_session_id) {
+          throw new Error('Payment Session ID not returned. Check edge function logs.');
         }
 
-        // Store the payment URL
-        zohoPaymentUrl = result.payment_url;
+        // Store the session ID
+        paymentSessionId = result.payment_session_id;
 
         // Show the payment details card
         showPaymentDetailsCard(registrationData, amount);
@@ -517,14 +528,14 @@ const INDIVIDUAL_AMOUNT = import.meta.env.INDIVIDUAL_REGISTRATION_AMOUNT || 299;
         if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Proceed to Payment'; }
 
       } catch (err: any) {
-        showPaymentError(err.message || 'Unable to create payment link. Please try again.');
+        showPaymentError(err.message || 'Unable to create payment session. Please try again.');
         if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Proceed to Payment'; }
       }
     });
 
-    // ── Pay Now Button ─────────────────────────────────────────────────────────
+    // ── Pay Now Button (Zoho Widget) ──────────────────────────────────────────
     payNowBtn?.addEventListener('click', () => {
-      if (!zohoPaymentUrl) return;
+      if (!paymentSessionId) return;
 
       // Show loading state on button
       if (payBtnText) payBtnText.style.display = 'none';
@@ -534,15 +545,46 @@ const INDIVIDUAL_AMOUNT = import.meta.env.INDIVIDUAL_REGISTRATION_AMOUNT || 299;
         payNowBtn.style.opacity = '0.8';
       }
 
-      // Small delay for visual feedback, then redirect
-      setTimeout(() => {
-        window.location.href = zohoPaymentUrl;
-      }, 800);
+      try {
+        // @ts-ignore
+        const zpayments = new ZPayments();
+        zpayments.initialize({
+          'api_key': ZOHO_API_KEY,
+          'payment_session_id': paymentSessionId
+        });
+
+        // Global callback handler
+        (window as any).zpayments_callback = (response: any) => {
+           console.log('[ZOHO][WIDGET][CALLBACK]', response);
+           if (response.status === 'captured' || response.status === 'success') {
+              // Redirect to success page
+              window.location.href = `/payment-success?registration_id=${registrationData.id || ''}`;
+           } else if (response.status === 'failed') {
+              showPaymentError('Payment failed. Please try again.');
+              resetPayButton();
+           }
+        };
+
+        zpayments.open();
+      } catch (err: any) {
+        console.error('[ZOHO][WIDGET][ERROR]', err);
+        showPaymentError('Failed to open payment widget. Check console for details.');
+        resetPayButton();
+      }
     });
+
+    function resetPayButton() {
+      if (payBtnText) payBtnText.style.display = 'inline';
+      if (payBtnSpinner) payBtnSpinner.style.display = 'none';
+      if (payNowBtn) {
+        payNowBtn.disabled = false;
+        payNowBtn.style.opacity = '1';
+      }
+    }
 
     // ── Back to form from payment details ──────────────────────────────────────
     backToFormBtn?.addEventListener('click', () => {
-      zohoPaymentUrl = '';
+      paymentSessionId = '';
       step3?.classList.remove('active');
       step2?.classList.add('active');
     });
@@ -600,7 +642,7 @@ const INDIVIDUAL_AMOUNT = import.meta.env.INDIVIDUAL_REGISTRATION_AMOUNT || 299;
 
     // ── Reset Form ─────────────────────────────────────────────────────────────
     function resetForm() {
-      zohoPaymentUrl = '';
+      paymentSessionId = '';
       step1?.classList.add('active');
       step2?.classList.remove('active');
       step3?.classList.remove('active');

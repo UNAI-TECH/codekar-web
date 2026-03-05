@@ -129,19 +129,63 @@ async function createPaymentLink(params: {
     throw new Error("Failed to create Zoho payment link after trying all regions and services. Check if ZOHO_PAYMENTS_ACCOUNT_ID is correct.");
 }
 
+/**
+ * Creates a Zoho Checkout Session for the widget
+ */
+async function createPaymentSession(params: {
+    amount: number;
+    currency: string;
+    email: string;
+    name: string;
+    registrationId: string;
+    description: string;
+}) {
+    const accessToken = await getZohoAccessToken();
+    const orgId = Deno.env.get('ZOHO_USER_ID') || "60058565264";
+    const accountId = Deno.env.get('ZOHO_PAYMENTS_ACCOUNT_ID') || orgId;
+
+    // Zoho Checkout Session URL
+    const url = `https://payments.zoho.in/api/v1/paymentsessions?account_id=${accountId}`;
+
+    const payload = {
+        amount: Number(params.amount).toFixed(2),
+        currency_code: params.currency,
+        reference_id: params.registrationId,
+        description: params.description,
+        customer_details: {
+            email: params.email || 'customer@codekarx.com',
+            name: params.name || 'Participant'
+        },
+        return_url: `https://www.codekarx.com/payment-success?registration_id=${params.registrationId}`
+    };
+
+    try {
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Zoho-oauthtoken ${accessToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (res.ok && data.payment_session_id) {
+            return data;
+        }
+
+        console.warn(`[ZOHO][SESSION][ERROR] ${res.status}: ${JSON.stringify(data)}`);
+        throw new Error(data.message || "Failed to create payment session");
+    } catch (err) {
+        console.error('[ZOHO][SESSION][CRITICAL]:', err.message);
+        throw err;
+    }
+}
+
 serve(async (req: Request) => {
     if (req.method === 'OPTIONS') return new Response(null, { status: 200, headers: corsHeaders });
 
     try {
-        console.log(`[DEBUG] Environment Check:
-            ZOHO_CLIENT_ID: ${Deno.env.get('ZOHO_CLIENT_ID') ? 'Set' : 'MISSING'}
-            ZOHO_CLIENT_SECRET: ${Deno.env.get('ZOHO_CLIENT_SECRET') ? 'Set' : 'MISSING'}
-            ZOHO_REFRESH_TOKEN: ${Deno.env.get('ZOHO_REFRESH_TOKEN') ? 'Set' : 'MISSING'}
-            ZOHO_PAYMENTS_ACCOUNT_ID: ${Deno.env.get('ZOHO_PAYMENTS_ACCOUNT_ID') ? 'Set' : 'MISSING'}
-            ZOHO_USER_ID: ${Deno.env.get('ZOHO_USER_ID') ? 'Set' : 'MISSING'}
-            SUPABASE_URL: ${Deno.env.get('SUPABASE_URL') ? 'Set' : 'MISSING'}
-            SUPABASE_SERVICE_ROLE_KEY: ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ? 'Set' : 'MISSING'}`);
-
         const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
         const body = await req.json();
         const { action } = body;
@@ -150,7 +194,7 @@ serve(async (req: Request) => {
             return new Response(JSON.stringify({ status: 'ok' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
 
-        if (action === 'create-link') {
+        if (action === 'create-link' || action === 'create-session') {
             const {
                 name,
                 email,
@@ -168,7 +212,7 @@ serve(async (req: Request) => {
                 member_4
             } = body;
 
-            // 1. Insert into Supabase first (Explicitly map columns to avoid 'action' error)
+            // 1. Insert into Supabase first
             const { data: reg, error: dbError } = await supabase.from('registrations').insert({
                 full_name: name || 'Unknown',
                 email: email || null,
@@ -193,21 +237,44 @@ serve(async (req: Request) => {
             if (dbError) throw new Error(`Database Insert Failed: ${dbError.message}`);
 
             try {
-                // 2. Create Payment Link with bulletproof strategy
-                const { url, link_id } = await createPaymentLink({
-                    amount: Math.max(Number(amount), 1), // Minimum 1 INR
-                    currency: 'INR',
-                    email: email || 'customer@codekarx.com',
-                    name: name || 'Participant',
-                    registrationId: reg.id,
-                    description: `CodeKar 2026 - ${name}`
-                });
+                if (action === 'create-session') {
+                    // NEW: Create Session for Widget
+                    const sessionData = await createPaymentSession({
+                        amount: Math.max(Number(amount), 1),
+                        currency: 'INR',
+                        email: email || 'customer@codekarx.com',
+                        name: name || 'Participant',
+                        registrationId: reg.id,
+                        description: `CodeKar 2026 - ${name}`
+                    });
 
-                if (link_id) await supabase.from('registrations').update({ zoho_payment_link_id: link_id }).eq('id', reg.id);
+                    // Save session ID to DB
+                    await supabase.from('registrations').update({ zoho_session_id: sessionData.payment_session_id }).eq('id', reg.id);
 
-                return new Response(JSON.stringify({ success: true, payment_url: url, registration_id: reg.id }), {
-                    headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-                });
+                    return new Response(JSON.stringify({
+                        success: true,
+                        payment_session_id: sessionData.payment_session_id,
+                        registration_id: reg.id
+                    }), {
+                        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+                    });
+                } else {
+                    // OLD: Create Legacy Link
+                    const { url, link_id } = await createPaymentLink({
+                        amount: Math.max(Number(amount), 1),
+                        currency: 'INR',
+                        email: email || 'customer@codekarx.com',
+                        name: name || 'Participant',
+                        registrationId: reg.id,
+                        description: `CodeKar 2026 - ${name}`
+                    });
+
+                    if (link_id) await supabase.from('registrations').update({ zoho_payment_link_id: link_id }).eq('id', reg.id);
+
+                    return new Response(JSON.stringify({ success: true, payment_url: url, registration_id: reg.id }), {
+                        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+                    });
+                }
             } catch (err: any) {
                 console.error('[ZOHO CALL FAILED]:', err.message);
                 await supabase.from('registrations').update({ payment_status: 'link_failed' }).eq('id', reg.id);

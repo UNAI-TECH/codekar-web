@@ -52,6 +52,38 @@ async function resolveZohoToken(): Promise<{ token: string; headerPrefix: string
     throw new Error("No valid Zoho auth token. Set ZOHO_PAYMENTS_API_KEY in Supabase secrets.");
 }
 
+// ── Check session status via Zoho API ─────────────────────────────────────────
+async function checkZohoSessionStatus(sessionId: string): Promise<{
+    status: "paid" | "pending" | "failed";
+    zoho_payment_id?: string;
+}> {
+    const { token, headerPrefix } = await resolveZohoToken();
+    const accountId = Deno.env.get("ZOHO_PAYMENTS_ACCOUNT_ID");
+
+    const apiUrl = `https://payments.zoho.in/api/v1/paymentsessions/${sessionId}?account_id=${accountId}`;
+
+    const res = await fetch(apiUrl, {
+        headers: {
+            Authorization: `${headerPrefix} ${token}`,
+            "Content-Type": "application/json",
+        },
+    });
+
+    if (!res.ok) return { status: "pending" };
+
+    const data = await res.json();
+    const sessionData = data.paymentsession || data;
+    const sessionStatus = (sessionData.status || "").toLowerCase();
+
+    if (sessionStatus === "completed" || sessionStatus === "paid") {
+        return { status: "paid", zoho_payment_id: sessionData.payment_id };
+    } else if (sessionStatus === "failed") {
+        return { status: "failed" };
+    }
+
+    return { status: "pending" };
+}
+
 // ── Check payment link status via Zoho API ────────────────────────────────────
 async function checkZohoPaymentLinkStatus(payment_link_id: string): Promise<{
     status: "paid" | "pending" | "failed" | "cancelled" | "expired";
@@ -189,34 +221,43 @@ serve(async (req: Request) => {
             );
         }
 
-        // 3. If no Zoho payment link ID, we can't verify — return pending
-        if (!registration.zoho_payment_link_id) {
+        // 3. If no Zoho payment link ID or Session ID, we can't verify — return pending
+        if (!registration.zoho_payment_link_id && !registration.zoho_session_id) {
             console.warn(
-                "No zoho_payment_link_id found for registration:",
+                "No zoho_payment_link_id or zoho_session_id found for registration:",
                 registration_id
             );
 
-            // Generate a code and mark as paid (fallback only if absolutely needed)
             return new Response(
                 JSON.stringify({
                     status: "pending",
                     registration,
-                    message: "Payment link not found — please contact support",
+                    message: "Payment ID not found — waiting for creation",
                 }),
                 { headers: { ...corsHeaders, "Content-Type": "application/json" } }
             );
         }
 
         // 4. Verify with Zoho API
-        const { status: zohoStatus, zoho_payment_id } =
-            await checkZohoPaymentLinkStatus(registration.zoho_payment_link_id);
+        let zohoStatus: string;
+        let zoho_payment_id: string | undefined;
+
+        if (registration.zoho_session_id) {
+            const sessionResult = await checkZohoSessionStatus(registration.zoho_session_id);
+            zohoStatus = sessionResult.status;
+            zoho_payment_id = sessionResult.zoho_payment_id;
+        } else {
+            const linkResult = await checkZohoPaymentLinkStatus(registration.zoho_payment_link_id!);
+            zohoStatus = linkResult.status;
+            zoho_payment_id = linkResult.zoho_payment_id;
+        }
 
         console.log(
             `Zoho status for registration ${registration_id}: ${zohoStatus}`
         );
 
         // 5. Update Supabase based on Zoho status
-        if (zohoStatus === "paid") {
+        if (zohoStatus === "paid" || zohoStatus === "completed") {
             // Generate unique participation code
             const prefix = registration.registration_type === "team" ? "TEAM" : "IND";
             const randomStr = Math.random().toString(36).substring(2, 7).toUpperCase();

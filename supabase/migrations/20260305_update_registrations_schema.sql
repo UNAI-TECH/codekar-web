@@ -33,12 +33,14 @@ create table public.registrations (
   member_3 text null,
   member_4 text null,
   zoho_payment_link_id text null,
+  zoho_session_id text null,
   constraint registrations_pkey primary key (id),
   constraint registrations_generated_code_key unique (generated_code)
 ) TABLESPACE pg_default;
 
 create index IF not exists idx_registrations_payment_status on public.registrations using btree (payment_status) TABLESPACE pg_default;
 create index IF not exists idx_registrations_zoho_link_id on public.registrations using btree (zoho_payment_link_id) TABLESPACE pg_default;
+create index IF not exists idx_registrations_zoho_session_id on public.registrations using btree (zoho_session_id) TABLESPACE pg_default;
 create index IF not exists idx_registrations_generated_code on public.registrations using btree (generated_code) TABLESPACE pg_default;
 create index IF not exists idx_registrations_email on public.registrations using btree (email) TABLESPACE pg_default;
 
