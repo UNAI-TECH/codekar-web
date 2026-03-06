@@ -2,11 +2,13 @@
 const TEAM_AMOUNT = import.meta.env.TEAM_REGISTRATION_AMOUNT || 999;
 const INDIVIDUAL_AMOUNT = import.meta.env.INDIVIDUAL_REGISTRATION_AMOUNT || 299;
 const ZOHO_ACCOUNT_ID = import.meta.env.PUBLIC_ZOHO_PAYMENTS_ACCOUNT_ID || '60064885871';
+const ZOHO_API_KEY_VAL = import.meta.env.PUBLIC_ZOHO_PAYMENTS_API_KEY || '';
 ---
 <div id="registration-modal" class="modal" aria-hidden="true" data-open="false" 
      data-team-amount={TEAM_AMOUNT} 
      data-individual-amount={INDIVIDUAL_AMOUNT}
-     data-account-id={ZOHO_ACCOUNT_ID}>
+     data-account-id={ZOHO_ACCOUNT_ID}
+     data-api-key={ZOHO_API_KEY_VAL}>
   <div class="modal-overlay"></div>
   <div class="modal-content" data-lenis-prevent>
     <button class="close-btn" aria-label="Close modal">&times;</button>
@@ -353,7 +355,7 @@ const ZOHO_ACCOUNT_ID = import.meta.env.PUBLIC_ZOHO_PAYMENTS_ACCOUNT_ID || '6006
     let registrationType = 'individual';
     let registrationData: any = {};
     let paymentSessionId = '';
-    const ZOHO_API_KEY = (window as any).ZOHO_PAYMENTS_API_KEY || import.meta.env?.PUBLIC_ZOHO_PAYMENTS_API_KEY || '';
+    const ZOHO_API_KEY = (window as any).ZOHO_PAYMENTS_API_KEY || modal?.dataset.apiKey || import.meta.env?.PUBLIC_ZOHO_PAYMENTS_API_KEY || '';
 
     // ── Scroll Lock ────────────────────────────────────────────────────────────
     if (modal) {
