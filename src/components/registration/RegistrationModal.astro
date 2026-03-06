@@ -1,10 +1,12 @@
 ---
 const TEAM_AMOUNT = import.meta.env.TEAM_REGISTRATION_AMOUNT || 999;
 const INDIVIDUAL_AMOUNT = import.meta.env.INDIVIDUAL_REGISTRATION_AMOUNT || 299;
+const ZOHO_ACCOUNT_ID = import.meta.env.PUBLIC_ZOHO_PAYMENTS_ACCOUNT_ID || '60064885871';
 ---
 <div id="registration-modal" class="modal" aria-hidden="true" data-open="false" 
      data-team-amount={TEAM_AMOUNT} 
-     data-individual-amount={INDIVIDUAL_AMOUNT}>
+     data-individual-amount={INDIVIDUAL_AMOUNT}
+     data-account-id={ZOHO_ACCOUNT_ID}>
   <div class="modal-overlay"></div>
   <div class="modal-content" data-lenis-prevent>
     <button class="close-btn" aria-label="Close modal">&times;</button>
@@ -548,29 +550,35 @@ const INDIVIDUAL_AMOUNT = import.meta.env.INDIVIDUAL_REGISTRATION_AMOUNT || 299;
 
       try {
         // @ts-ignore
-        const zpayments = new ZPayments();
-        zpayments.initialize({
-          'api_key': ZOHO_API_KEY,
-          'payment_session_id': paymentSessionId,
-          'domain': 'IN'
+        const zpayments = new ZPayments({
+          account_id: modal?.dataset.accountId,
+          edition: 'IN',
+          otherOptions: {
+            api_key: ZOHO_API_KEY
+          }
         });
 
-        // Global callback handler
-        (window as any).zpayments_callback = (response: any) => {
-           console.log('[ZOHO][WIDGET][CALLBACK]', response);
-           if (response.status === 'captured' || response.status === 'success') {
-              // Redirect to success page
-              window.location.href = `/payment-success?registration_id=${registrationData.id || ''}`;
-           } else if (response.status === 'failed') {
-              showPaymentError('Payment failed. Please try again.');
-              resetPayButton();
+        zpayments.requestPaymentMethod({
+          payment_session_id: paymentSessionId
+        }).then((response: any) => {
+           console.log('[ZOHO][WIDGET][SUCCESS]', response);
+           // response is typically the transaction/session details
+           // Redirect to success page
+           window.location.href = `/payment-success?registration_id=${registrationData.id || ''}`;
+        }).catch((err: any) => {
+           console.error('[ZOHO][WIDGET][ERROR]', err);
+           // Handle specific closure or failure
+           if (err.code === 'widget_closed') {
+             // User just closed it, no error message needed
+           } else {
+             showPaymentError(err.message || 'Payment failed. Please try again.');
            }
-        };
+           resetPayButton();
+        });
 
-        zpayments.open();
       } catch (err: any) {
-        console.error('[ZOHO][WIDGET][ERROR]', err);
-        showPaymentError('Failed to open payment widget. Check console for details.');
+        console.error('[ZOHO][WIDGET][INIT_ERROR]', err);
+        showPaymentError('Failed to initialize payment widget.');
         resetPayButton();
       }
     });
