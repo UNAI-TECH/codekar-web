@@ -219,7 +219,7 @@ const RegistrationModal: React.FC<Props> = ({
             const instance = new window.ZPayments({
                 account_id: zohoAccountId,
                 domain: 'IN',
-                api_key: zohoApiKey
+                otherOptions: { api_key: zohoApiKey }
             });
 
             const options = {
@@ -227,6 +227,7 @@ const RegistrationModal: React.FC<Props> = ({
                 currency_code: 'INR',
                 currency_symbol: '₹',
                 payment_session_id: paymentSessionId,
+                payments_session_id: paymentSessionId,
                 business: 'CODEKARX',
                 description: `CodeKar 2026 Registration - ${registrationId}`,
                 reference_number: registrationId,
