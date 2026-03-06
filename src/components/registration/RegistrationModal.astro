@@ -549,9 +549,17 @@ const ZOHO_ACCOUNT_ID = import.meta.env.PUBLIC_ZOHO_PAYMENTS_ACCOUNT_ID || '6006
       }
 
       try {
+        const accountId = modal?.dataset.accountId;
+        console.log('[ZOHO][WIDGET][INIT]', {
+          account_id: accountId,
+          edition: 'IN',
+          has_api_key: !!ZOHO_API_KEY,
+          session_id: paymentSessionId
+        });
+
         // @ts-ignore
         const zpayments = new ZPayments({
-          account_id: modal?.dataset.accountId,
+          account_id: accountId,
           edition: 'IN',
           otherOptions: {
             api_key: ZOHO_API_KEY
