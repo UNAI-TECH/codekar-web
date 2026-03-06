@@ -537,7 +537,7 @@ const ZOHO_ACCOUNT_ID = import.meta.env.PUBLIC_ZOHO_PAYMENTS_ACCOUNT_ID || '6006
     });
 
     // ── Pay Now Button (Zoho Widget) ──────────────────────────────────────────
-    payNowBtn?.addEventListener('click', () => {
+    payNowBtn?.addEventListener('click', async () => {
       if (!paymentSessionId) return;
 
       // Show loading state on button
@@ -548,41 +548,59 @@ const ZOHO_ACCOUNT_ID = import.meta.env.PUBLIC_ZOHO_PAYMENTS_ACCOUNT_ID || '6006
         payNowBtn.style.opacity = '0.8';
       }
 
+      const amount = registrationType === 'team' ? teamAmt : individualAmt;
+
       try {
-        const accountId = modal?.dataset.accountId;
         console.log('[ZOHO][WIDGET][INIT]', {
-          account_id: accountId,
-          edition: 'IN',
-          has_api_key: !!ZOHO_API_KEY,
-          session_id: paymentSessionId
+          account_id: modal?.dataset.accountId,
+          domain: 'IN',
+          has_api_key: !!ZOHO_API_KEY
         });
 
         // @ts-ignore
-        const zpayments = new ZPayments({
-          account_id: accountId,
-          edition: 'IN',
+        const instance = new window.ZPayments({
+          account_id: modal?.dataset.accountId,
+          domain: 'IN',
           otherOptions: {
             api_key: ZOHO_API_KEY
           }
         });
 
-        zpayments.requestPaymentMethod({
-          payment_session_id: paymentSessionId
-        }).then((response: any) => {
-           console.log('[ZOHO][WIDGET][SUCCESS]', response);
-           // response is typically the transaction/session details
-           // Redirect to success page
-           window.location.href = `/payment-success?registration_id=${registrationData.id || ''}`;
-        }).catch((err: any) => {
-           console.error('[ZOHO][WIDGET][ERROR]', err);
-           // Handle specific closure or failure
-           if (err.code === 'widget_closed') {
-             // User just closed it, no error message needed
-           } else {
-             showPaymentError(err.message || 'Payment failed. Please try again.');
-           }
-           resetPayButton();
-        });
+        const options = {
+          amount: amount.toString(), // Zoho expects string for amount in widget
+          currency_code: 'INR',
+          currency_symbol: '₹',
+          payment_session_id: paymentSessionId, // Official docs use singular
+          payments_session_id: paymentSessionId, // User snippet uses plural - adding both to be safe
+          business: 'CODEKARX',
+          description: `Registration for ${registrationData.project_track} - ${registrationType === 'team' ? 'Team' : 'Individual'}`,
+          reference_number: registrationData.id || `REG-${Date.now()}`,
+          address: {
+            name: registrationData.name,
+            email: registrationData.email,
+            phone: registrationData.phone
+          }
+        };
+
+        console.log('[ZOHO][WIDGET][OPTIONS]', options);
+
+        try {
+          // @ts-ignore
+          const data = await instance.requestPaymentMethod(options);
+          console.log('[ZOHO][WIDGET][SUCCESS]', data);
+          
+          // Redirect to success page
+          window.location.href = `/payment-success?registration_id=${registrationData.id || ''}`;
+        } catch (err: any) {
+          if (err.code !== 'widget_closed') {
+            console.error('[ZOHO][WIDGET][ERROR]', err);
+            showPaymentError(err.message || 'Payment failed. Please try again.');
+          }
+        } finally {
+          // @ts-ignore
+          await instance.close();
+          resetPayButton();
+        }
 
       } catch (err: any) {
         console.error('[ZOHO][WIDGET][INIT_ERROR]', err);
