@@ -19,11 +19,8 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       <h1>Payment Successful!</h1>
       <p class="subtitle">Your registration for <strong>CODEKARX 2026</strong> is confirmed.</p>
 
-      <div class="code-card">
-        <small>Your Participation Code</small>
-        <div id="participation-code" class="code">IND-2026-XXXXX</div>
-        <button class="copy-btn" id="copy-code-btn">Copy Code</button>
-      </div>
+      <!-- Space for layout -->
+      <div style="margin-bottom: 2rem;"></div>
 
       <div class="info-grid">
         <div class="info-item">
@@ -46,16 +43,22 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 
       <div class="action-buttons">
         <a
-          href="https://chat.whatsapp.com/G5v7tXGzX7z7z7z7z7z7"
+          href="https://chat.whatsapp.com/GmmDfm3k9ad2zaeCcZty1P"
           target="_blank"
           rel="noopener"
           class="whatsapp-btn"
         >
           📱 Join WhatsApp Group
         </a>
-        <button id="download-invoice-btn" class="invoice-btn">
-          📄 Download Invoice
-        </button>
+        <a 
+          href="https://phase.codekarx.com/" 
+          target="_blank" 
+          rel="noopener" 
+          class="invoice-btn"
+          style="text-decoration: none;"
+        >
+          📄 Phase 1 Registration
+        </a>
       </div>
 
       <a href="/" class="home-link">← Back to Home</a>
@@ -123,8 +126,6 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 
   function showSuccess(registration) {
     registrationData = registration;
-    const code = registration.generated_code || 'N/A';
-    document.getElementById('participation-code').textContent = code;
     document.getElementById('reg-name').textContent = registration.team_name || registration.full_name || registration.name || '—';
     document.getElementById('reg-email').textContent = registration.email || '—';
     document.getElementById('reg-amount').textContent = `₹${registration.amount || 1}`;
@@ -178,68 +179,9 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
     if (registrationId) runVerification(registrationId);
   });
 
-  // Copy Code
-  document.getElementById('copy-code-btn')?.addEventListener('click', () => {
-    const code = document.getElementById('participation-code')?.textContent;
-    if (code) {
-      navigator.clipboard.writeText(code).then(() => {
-        const btn = document.getElementById('copy-code-btn');
-        if (btn) { btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = 'Copy Code', 2000); }
-      });
-    }
-  });
+  // Init handling (params check) moved to runVerification
 
-  // Download Invoice
-  document.getElementById('download-invoice-btn')?.addEventListener('click', async () => {
-    if (!registrationData) return;
-    const { jsPDF } = await import('jspdf');
-    const doc = new jsPDF();
-    const invoiceId = `INV-${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
-    const now = new Date();
-    const primary = [37, 99, 235];
-    const gray = [100, 116, 139];
-
-    doc.setFontSize(22);
-    doc.setTextColor(...primary);
-    doc.text('CODEKARX 2026 — Unai Tech', 105, 25, { align: 'center' });
-    doc.setFontSize(10);
-    doc.setTextColor(...gray);
-    doc.text('Payment Invoice', 105, 33, { align: 'center' });
-    doc.setDrawColor(...primary);
-    doc.setLineWidth(0.5);
-    doc.line(20, 40, 190, 40);
-
-    doc.setTextColor(0);
-    doc.setFontSize(11);
-    doc.text(`Invoice ID: ${invoiceId}`, 20, 52);
-    doc.text(`Date: ${now.toLocaleString('en-IN')}`, 20, 59);
-    doc.text(`Status: PAID`, 20, 66);
-
-    doc.setFontSize(14);
-    doc.setTextColor(...primary);
-    doc.text('Participant Details', 20, 80);
-
-    doc.setTextColor(0);
-    doc.setFontSize(11);
-    doc.text(`Name: ${registrationData.team_name || registrationData.name || 'N/A'}`, 20, 90);
-    doc.text(`Email: ${registrationData.email || 'N/A'}`, 20, 97);
-    doc.text(`Phone: ${registrationData.phone || 'N/A'}`, 20, 104);
-    doc.text(`College: ${registrationData.college || 'N/A'}`, 20, 111);
-    doc.text(`Track: ${registrationData.project_track || 'N/A'}`, 20, 118);
-    doc.text(`Project: ${registrationData.project_name || 'N/A'}`, 20, 125);
-    doc.text(`Amount Paid: ₹${registrationData.amount || 1}`, 20, 132);
-    doc.text(`Participation Code: ${registrationData.generated_code || 'N/A'}`, 20, 139);
-    doc.text(`Zoho Payment ID: ${registrationData.zoho_payment_id || 'N/A'}`, 20, 146);
-
-    doc.setDrawColor(226, 232, 240);
-    doc.line(20, 260, 190, 260);
-    doc.setFontSize(9);
-    doc.setTextColor(...gray);
-    doc.text('Computer-generated invoice. No signature required.', 105, 270, { align: 'center' });
-    doc.text('Thank you for participating in CODEKARX 2026!', 105, 276, { align: 'center' });
-
-    doc.save(`CODEKARX-${invoiceId}.pdf`);
-  });
+  // Download Invoice handler removed - now a direct link
 </script>
 
 <style>

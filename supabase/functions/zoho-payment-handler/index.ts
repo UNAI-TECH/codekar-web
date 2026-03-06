@@ -123,13 +123,13 @@ async function createPaymentSession(params: {
     }
 
     const payload = {
-        amount: Math.round(Number(params.amount)),
+        amount: Math.round(Number(params.amount)).toString(),
         currency: params.currency,
         reference_number: params.registrationId,
         description: `CodeKar 2026 Registration - ${params.registrationId}`,
     };
 
-    console.log(`[ZOHO][SESSION] Creating session on ${domain} using account ${accountId}`);
+    console.log(`[ZOHO][SESSION] Creating session on ${domain} using account ${accountId} with payload:`, JSON.stringify(payload));
 
     const url = `https://payments.zoho.${domain}/api/v1/paymentsessions?account_id=${accountId}`;
 
@@ -145,8 +145,9 @@ async function createPaymentSession(params: {
     const data = await res.json();
     if (res.ok) {
         const session = data.payments_session || data;
+        console.log(`[ZOHO][SESSION] Created session ID: ${session.payments_session_id || data.payment_session_id || data.id}`);
         return {
-            payment_session_id: session.payments_session_id,
+            payment_session_id: session.payments_session_id || data.payment_session_id || data.id,
             ...session
         };
     }
@@ -180,6 +181,8 @@ serve(async (req: Request) => {
             team_name, college, department, year,
             project_track, project_name, member_2, member_3, member_4
         } = body;
+
+        console.log(`[HANDLER] Received amount: ${amount}, type: ${registration_type}, email: ${email}`);
 
         // 1. Insert into Supabase
         const { data: reg, error: dbError } = await supabase.from('registrations').insert({

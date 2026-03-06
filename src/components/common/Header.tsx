@@ -100,11 +100,7 @@ const Header: React.FC<HeaderProps> = ({ hideCTA = false }) => {
         }
     };
 
-    const handleApplyClick = async () => {
-        if (isLoggedIn) {
-            window.location.href = '/type';
-            return;
-        }
+    const handleApplyClick = () => {
         window.dispatchEvent(new CustomEvent('open-registration-modal'));
     };
 
