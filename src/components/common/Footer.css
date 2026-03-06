@@ -1,0 +1,164 @@
+footer {
+    background: #0f172a;
+    color: #cbd5e1;
+    padding: 2.5rem 0 0;
+    margin-top: 3rem;
+}
+
+.footer-content {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 2rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.footer-logo {
+    height: clamp(5rem, 0.5vw, 1rem);
+    width: auto;
+    object-fit: contain;
+    margin-bottom: 1rem;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+    transition: transform 0.3s ease;
+}
+
+.footer-logo:hover {
+    transform: scale(1.05);
+}
+
+.footer-brand p {
+    font-size: 0.875rem;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+    color: #94a3b8;
+}
+
+.social-links {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.social-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 0.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #cbd5e1;
+    transition: all 0.3s ease;
+}
+
+.social-icon:hover {
+    background: var(--color-s-primary);
+    color: white;
+    transform: translateY(-3px);
+}
+
+.footer-links h4,
+.footer-contact h4 {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: white;
+    margin-bottom: 1rem;
+}
+
+.footer-links ul,
+.footer-contact ul {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.footer-links a,
+.footer-contact a {
+    color: #94a3b8;
+    font-size: 0.875rem;
+    transition: color 0.2s;
+}
+
+.footer-links a:hover,
+.footer-contact a:hover {
+    color: var(--color-s-primary);
+}
+
+.footer-contact li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #94a3b8;
+    font-size: 0.875rem;
+}
+
+.footer-contact svg {
+    color: var(--color-s-primary);
+    flex-shrink: 0;
+}
+
+.footer-bottom {
+    padding: 1rem 0;
+}
+
+.footer-bottom .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.footer-bottom p {
+    font-size: 0.8rem;
+    color: #64748b;
+}
+
+.unai-credit {
+    font-weight: 500;
+}
+
+@media (max-width: 768px) {
+    footer {
+        padding: 2rem 0 0;
+    }
+
+    .footer-content {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .footer-bottom .container {
+        flex-direction: column;
+        gap: 0.5rem;
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    footer {
+        padding: 1.5rem 0 0;
+        margin-top: 2rem;
+    }
+
+    .footer-brand h3 {
+        font-size: 1.25rem;
+    }
+
+    .footer-brand p {
+        font-size: 0.8rem;
+    }
+
+    .social-icon {
+        width: 32px;
+        height: 32px;
+    }
+
+    .footer-links h4,
+    .footer-contact h4 {
+        font-size: 0.8rem;
+    }
+
+    .footer-links a,
+    .footer-contact a,
+    .footer-contact li {
+        font-size: 0.8rem;
+    }
+}

@@ -1,0 +1,49 @@
+.scroll-stack-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.scroll-stack-inner {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    padding: 4rem 0;
+}
+
+.scroll-stack-card {
+    position: sticky;
+    top: 15vh;
+    margin-bottom: 4rem;
+    background: white;
+    border-radius: 24px;
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.1);
+    padding: 3rem;
+    border: 2px solid var(--color-s-primary);
+    transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+    will-change: transform;
+}
+
+.scroll-stack-card:nth-child(1) {
+    top: 15vh;
+}
+
+.scroll-stack-card:nth-child(2) {
+    top: 18vh;
+}
+
+.scroll-stack-card:nth-child(3) {
+    top: 21vh;
+}
+
+.scroll-stack-card:nth-child(4) {
+    top: 24vh;
+}
+
+.scroll-stack-card:nth-child(5) {
+    top: 27vh;
+}
+
+.scroll-stack-card:nth-child(6) {
+    top: 30vh;
+}

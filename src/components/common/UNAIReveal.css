@@ -1,0 +1,62 @@
+.codekar-container {
+    position: fixed;
+    left: 2rem;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 500;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    pointer-events: none;
+}
+
+.letter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-start;
+}
+
+.kar-group {
+    margin-top: 0.5rem;
+}
+
+.letter {
+    font-size: 4rem;
+    font-weight: 900;
+    line-height: 0.9;
+    opacity: 0;
+    display: block;
+    text-transform: uppercase;
+    letter-spacing: -0.05em;
+}
+
+/* CODE letters - Dark Navy */
+.letter-dark {
+    color: var(--color-s-primary-dark);
+}
+
+/* KAR letters - Blue Gradient */
+.letter-gradient {
+    background: linear-gradient(135deg, var(--color-s-gradient-start) 0%, var(--color-s-gradient-end) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+    .codekar-container {
+        left: 1rem;
+    }
+
+    .letter {
+        font-size: 3rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .codekar-container {
+        display: none;
+    }
+}
