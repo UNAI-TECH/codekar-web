@@ -574,10 +574,11 @@ const ZOHO_API_KEY_VAL = import.meta.env.PUBLIC_ZOHO_PAYMENTS_API_KEY || '1003.6
           amount: amount.toString(),
           currency_code: 'INR',
           currency_symbol: '₹',
-          payments_session_id: paymentSessionId,
+          payment_session_id: paymentSessionId, // Singular fallback
+          payments_session_id: paymentSessionId, // Plural from YAML/Snippet
           business: 'CODEKARX',
-          description: `Registration for ${registrationData.project_track} - ${registrationType === 'team' ? 'Team' : 'Individual'}`,
-          reference_number: registrationData.id, // MUST match the reference_number sent in creation
+          description: `CodeKar 2026 Registration - ${registrationData.id}`,
+          reference_number: registrationData.id,
           address: {
             name: registrationData.name,
             email: registrationData.email,

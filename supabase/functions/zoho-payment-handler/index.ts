@@ -126,6 +126,7 @@ async function createPaymentSession(params: {
         amount: Math.round(Number(params.amount)),
         currency: params.currency,
         reference_number: params.registrationId,
+        description: `CodeKar 2026 Registration - ${params.registrationId}`,
     };
 
     console.log(`[ZOHO][SESSION] Creating session on ${domain} using account ${accountId}`);
