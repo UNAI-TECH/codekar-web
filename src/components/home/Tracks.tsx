@@ -68,14 +68,14 @@ const Tracks: React.FC = () => {
     const openModal = (track: Track) => {
         setSelectedTrack(track);
         setIsModalOpen(true);
-        document.body.style.overflow = 'hidden';
+        document.body.classList.add('scroll-locked');
         // @ts-ignore
         if (window.lenis) window.lenis.stop();
     };
 
     const closeModal = useCallback(() => {
         setIsModalOpen(false);
-        document.body.style.overflow = '';
+        document.body.classList.remove('scroll-locked');
         // @ts-ignore
         if (window.lenis) window.lenis.start();
     }, []);
