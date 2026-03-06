@@ -524,8 +524,9 @@ const ZOHO_API_KEY_VAL = import.meta.env.PUBLIC_ZOHO_PAYMENTS_API_KEY || '1003.6
           throw new Error('Payment Session ID not returned. Check edge function logs.');
         }
 
-        // Store the session ID
+        // Store the session ID and registration DB ID
         paymentSessionId = result.payment_session_id;
+        registrationData.id = result.registration_id;
 
         // Show the payment details card
         showPaymentDetailsCard(registrationData, amount);
@@ -570,14 +571,13 @@ const ZOHO_API_KEY_VAL = import.meta.env.PUBLIC_ZOHO_PAYMENTS_API_KEY || '1003.6
         });
 
         const options = {
-          amount: amount.toString(), // Zoho expects string for amount in widget
+          amount: amount.toString(),
           currency_code: 'INR',
           currency_symbol: '₹',
-          payment_session_id: paymentSessionId, // Official docs use singular
-          payments_session_id: paymentSessionId, // User snippet uses plural - adding both to be safe
+          payments_session_id: paymentSessionId,
           business: 'CODEKARX',
           description: `Registration for ${registrationData.project_track} - ${registrationType === 'team' ? 'Team' : 'Individual'}`,
-          reference_number: registrationData.id || `REG-${Date.now()}`,
+          reference_number: registrationData.id, // MUST match the reference_number sent in creation
           address: {
             name: registrationData.name,
             email: registrationData.email,
