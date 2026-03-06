@@ -1,6 +1,42 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import Hero from '../components/home/Hero.astro';
+import Tracks from '../components/home/Tracks.astro';
+import OrganizingTeam from '../components/home/OrganizingTeam.astro';
+import Prizes from '../components/home/Prizes.astro';
+import Sponsors from '../components/home/Sponsors.astro';
+import FAQ from '../components/home/FAQ.astro';
+import AboutParallax from '../components/home/AboutParallax.astro';
+import CoPresented from '../components/home/CoPresented.astro';
+
 ---
 
-<meta http-equiv="refresh" content="0;url=/" />
-<script>window.location.href = '/';</script>
+<Layout title="CODEKARX Hackathon | UNAI TECH">
+	<Hero />
+	<div id="content">
+		<!-- Unified About + Mission + Vision Section -->
+		<AboutParallax />
+
+		<Tracks />
+		<Prizes />
+		<CoPresented />
+		<!-- <Sponsors /> -->
+		<!-- <OrganizingTeam /> -->
+
+		<FAQ />
+	</div>
+</Layout>
+
+<style>
+	/* Scroll Margin for sticky header offset */
+	:global(section) {
+		scroll-margin-top: 80px;
+	}
+	
+	#content {
+		position: relative;
+		z-index: 10;
+		background: #f8fafc;
+	}
+
+</style>
