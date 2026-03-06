@@ -28,6 +28,9 @@ const RegistrationModal: React.FC<Props> = ({
     const [lookupCode, setLookupCode] = useState('');
     const [lookupError, setLookupError] = useState(false);
 
+    console.log('[DEBUG][REACT] Modal Props:', { teamAmount, individualAmount });
+    console.log('[DEBUG][REACT] Registration Type:', registrationType);
+
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -166,6 +169,7 @@ const RegistrationModal: React.FC<Props> = ({
         setPaymentState('generating');
 
         const amount = registrationType === 'team' ? teamAmount : individualAmount;
+        console.log('[DEBUG][REACT] Submitting registration...', { registrationType, amount, teamAmount, individualAmount });
 
         try {
             const response = await fetch(`${import.meta.env.PUBLIC_SUPABASE_URL}/functions/v1/zoho-payment-handler`, {
@@ -213,6 +217,7 @@ const RegistrationModal: React.FC<Props> = ({
         setIsLoading(true);
 
         const amount = registrationType === 'team' ? teamAmount : individualAmount;
+        console.log('[DEBUG][REACT] handlePayNow - Amount:', amount);
 
         try {
             // @ts-ignore
