@@ -161,28 +161,6 @@ async function createPaymentSession(params: {
     throw new Error(data.message || "Failed to create payment session");
 }
 
-async function getPaymentSessionStatus(sessionId: string): Promise<any> {
-    const { token: accessToken, prefix: authHeader, domain } = await getZohoAccessToken();
-    const accountId = Deno.env.get('ZOHO_PAYMENTS_ACCOUNT_ID');
-
-    const url = `https://payments.zoho.${domain}/api/v1/paymentsessions/${sessionId}?account_id=${accountId}`;
-
-    const res = await fetch(url, {
-        method: 'GET',
-        headers: {
-            'Authorization': `${authHeader} ${accessToken}`,
-            'Content-Type': 'application/json'
-        }
-    });
-
-    const data = await res.json();
-    if (res.ok) {
-        return data.payments_session || data;
-    }
-
-    throw new Error(data.message || "Failed to verify payment session");
-}
-
 serve(async (req: Request) => {
     if (req.method === 'OPTIONS') return new Response(null, { status: 200, headers: corsHeaders });
 
@@ -197,83 +175,13 @@ serve(async (req: Request) => {
             return new Response(JSON.stringify({ status: 'ok' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
 
-        // --- Action: Create Session (No DB Insert) ---
-        if (action === 'create-session' || action === 'session') {
-            const { amount, name, email, phone } = body;
-            const tempRefId = `tmp_${crypto.randomUUID()}`;
-
-            const sessionData = await createPaymentSession({
-                amount: Number(amount),
-                currency: 'INR',
-                email: email || '',
-                name: name || 'Participant',
-                phone: phone || '',
-                registrationId: tempRefId
-            });
-
-            return new Response(JSON.stringify({
-                success: true,
-                payment_session_id: sessionData.payment_session_id,
-                registration_id: tempRefId
-            }), {
-                headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-            });
-        }
-
-        // --- Action: Verify and Save (Post-Payment) ---
-        if (action === 'verify-and-save') {
-            const { payment_session_id, formData, registration_type, amount } = body;
-
-            // 1. Double check payment status with Zoho
-            console.log(`[VERIFY] Checking status for session: ${payment_session_id}`);
-            const statusData = await getPaymentSessionStatus(payment_session_id);
-
-            // In production, we should check statusData.status === 'paid' or similar
-            // For now, if we get data and it's successful, we proceed.
-            // NOTE: Add strict check here if Zoho provides a clear 'paid' status.
-            console.log(`[VERIFY] Zoho Status: ${statusData.status}`);
-
-            // 2. Insert into Supabase
-            const { data: reg, error: dbError } = await supabase.from('registrations').insert({
-                full_name: formData.name || 'Unknown',
-                email: formData.email || null,
-                phone: formData.phone || '0000000000',
-                college: formData.college || null,
-                department: formData.department || null,
-                year_of_study: formData.year ? Number(formData.year) : null,
-                track: formData.projectTrack || null,
-                project_name: formData.projectName || null,
-                registration_type: registration_type || 'individual',
-                team_name: registration_type === 'team' ? formData.teamName : null,
-                amount: Number(amount) || 0,
-                payment_status: 'paid', // Mark as paid immediately
-                zoho_session_id: payment_session_id,
-                member_2_name: formData.member2 || null,
-                member_3_name: formData.member3 || null,
-                member_4_name: formData.member4 || null,
-                team_leader_name: formData.name || 'Unknown',
-                leader_phone: formData.phone || '0000000000',
-                leader_email: formData.email || null,
-            }).select('id').single();
-
-            if (dbError) throw new Error(`Database Insert Failed: ${dbError.message}`);
-
-            return new Response(JSON.stringify({
-                success: true,
-                registration_id: reg.id
-            }), {
-                headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-            });
-        }
-
-        // Legacy Link Flow (Keep for BC if needed, but updated to insert only if paid? 
-        // Harder for link flow since Zoho usually webhooks. Keeping it as is for now.)
         const {
             name, email, phone, amount, registration_type,
             team_name, college, department, year,
             project_track, project_name, member_2, member_3, member_4
         } = body;
 
+        // 1. Insert into Supabase
         const { data: reg, error: dbError } = await supabase.from('registrations').insert({
             full_name: name || 'Unknown',
             email: email || null,
@@ -297,24 +205,52 @@ serve(async (req: Request) => {
 
         if (dbError) throw new Error(`Database Insert Failed: ${dbError.message}`);
 
-        const { url, link_id } = await createPaymentLink({
-            amount: Number(amount),
-            currency: 'INR',
-            email: email || '',
-            name: name || 'Participant',
-            registrationId: reg.id,
-            description: `CodeKar 2026 - ${name}`
-        });
+        try {
+            if (action === 'create-session' || action === 'session') {
+                const sessionData = await createPaymentSession({
+                    amount: Number(amount),
+                    currency: 'INR',
+                    email: email || '',
+                    name: name || 'Participant',
+                    phone: phone || '',
+                    registrationId: reg.id
+                });
 
-        if (link_id) await supabase.from('registrations').update({ zoho_payment_link_id: link_id }).eq('id', reg.id);
+                await supabase.from('registrations').update({ zoho_session_id: sessionData.payment_session_id }).eq('id', reg.id);
 
-        return new Response(JSON.stringify({
-            success: true,
-            payment_url: url,
-            registration_id: reg.id
-        }), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
+                return new Response(JSON.stringify({
+                    success: true,
+                    payment_session_id: sessionData.payment_session_id,
+                    registration_id: reg.id
+                }), {
+                    headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+                });
+            } else {
+                // Default to link flow
+                const { url, link_id } = await createPaymentLink({
+                    amount: Number(amount),
+                    currency: 'INR',
+                    email: email || '',
+                    name: name || 'Participant',
+                    registrationId: reg.id,
+                    description: `CodeKar 2026 - ${name}`
+                });
+
+                if (link_id) await supabase.from('registrations').update({ zoho_payment_link_id: link_id }).eq('id', reg.id);
+
+                return new Response(JSON.stringify({
+                    success: true,
+                    payment_url: url,
+                    registration_id: reg.id
+                }), {
+                    headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+                });
+            }
+        } catch (err: any) {
+            console.error('[ZOHO CALL FAILED]:', err.message);
+            await supabase.from('registrations').update({ payment_status: 'link_failed' }).eq('id', reg.id);
+            throw err;
+        }
 
     } catch (err: any) {
         console.error('Edge Function Error:', err.message);

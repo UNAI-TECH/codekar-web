@@ -177,11 +177,20 @@ const RegistrationModal: React.FC<Props> = ({
                 },
                 body: JSON.stringify({
                     action: 'create-session',
-                    amount,
                     name: formData.name,
                     email: formData.email,
                     phone: formData.phone,
-                    registration_type: registrationType
+                    college: formData.college,
+                    department: formData.department,
+                    year: formData.year,
+                    project_track: formData.projectTrack,
+                    project_name: formData.projectName,
+                    registration_type: registrationType,
+                    team_name: registrationType === 'team' ? formData.teamName : null,
+                    member_2: formData.member2 || null,
+                    member_3: formData.member3 || null,
+                    member_4: formData.member4 || null,
+                    amount,
                 }),
             });
 
@@ -189,7 +198,7 @@ const RegistrationModal: React.FC<Props> = ({
             if (!response.ok || result.error) throw new Error(result.error || 'Backend error');
 
             setPaymentSessionId(result.payment_session_id);
-            setRegistrationId(result.registration_id); // This is a temporary ID for tracking
+            setRegistrationId(result.registration_id);
             setPaymentState('details');
         } catch (err: any) {
             setErrorMessage(err.message || 'Unable to create payment session.');
@@ -231,37 +240,11 @@ const RegistrationModal: React.FC<Props> = ({
             try {
                 // @ts-ignore
                 await instance.requestPaymentMethod(options);
-
-                // --- POST-PAYMENT: VERIFY AND SAVE DATA ---
-                setPaymentState('generating'); // Brief "Saving Details..." state
-                const finalizeResponse = await fetch(`${import.meta.env.PUBLIC_SUPABASE_URL}/functions/v1/zoho-payment-handler`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${import.meta.env.PUBLIC_SUPABASE_ANON_KEY}`,
-                        'apikey': import.meta.env.PUBLIC_SUPABASE_ANON_KEY,
-                    },
-                    body: JSON.stringify({
-                        action: 'verify-and-save',
-                        payment_session_id: paymentSessionId,
-                        formData,
-                        registration_type: registrationType,
-                        amount
-                    }),
-                });
-
-                const finalizeResult = await finalizeResponse.json();
-                if (!finalizeResponse.ok || finalizeResult.error) throw new Error(finalizeResult.error || 'Finalization failed');
-
-                const realRegId = finalizeResult.registration_id;
-                setRegistrationId(realRegId);
                 setPaymentState('success');
-
-                // Immediate redirect to success page
-                window.location.href = `/payment-success?registration_id=${realRegId}`;
+                window.location.href = `/payment-success?registration_id=${registrationId}`;
             } catch (err: any) {
                 if (err.code !== 'widget_closed') {
-                    setErrorMessage(err.message || 'Payment or verification failed.');
+                    setErrorMessage(err.message || 'Payment failed.');
                     setPaymentState('error');
                 }
             } finally {
