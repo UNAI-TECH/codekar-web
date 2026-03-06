@@ -97,14 +97,7 @@
   // Handle Register Button Click
   registerBtn?.addEventListener('click', () => {
     closeModal();
-    const regModal = document.getElementById('registration-modal');
-    if (regModal) {
-       regModal.dataset.open = "true";
-       regModal.setAttribute('aria-hidden', 'false');
-       document.body.style.overflow = 'hidden';
-    } else {
-        window.location.href = '/#register';
-    }
+    window.dispatchEvent(new CustomEvent('open-registration-modal'));
   });
   
   // Export open function globally

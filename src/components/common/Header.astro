@@ -72,13 +72,7 @@ const { hideCTA = false } = Astro.props;
         return;
       }
 
-      const modal = document.getElementById('registration-modal');
-      if (modal) {
-        modal.dataset.open = "true";
-        document.body.classList.add('scroll-locked');
-      } else {
-        console.error('Registration modal not found');
-      }
+      window.dispatchEvent(new CustomEvent('open-registration-modal'));
     });
 
     // Hamburger Menu Toggle
