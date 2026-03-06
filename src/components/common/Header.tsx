@@ -113,7 +113,7 @@ const Header: React.FC<HeaderProps> = ({ hideCTA = false }) => {
     }, [closeMobileNav]);
 
     const navLinks = [
-        { name: 'Home', href: '/#home' },
+        { name: 'Home', href: '/home' },
         { name: 'Tracks', href: '/#tracks' },
         { name: 'About', href: '/#about' },
         { name: 'Sponsors', href: '/#sponsors' },
