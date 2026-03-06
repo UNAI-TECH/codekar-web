@@ -1,0 +1,167 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Privacy Policy | CODEKARX 2026">
+  <div class="legal-container">
+    <div class="legal-header">
+      <h1>Privacy Policy</h1>
+      <p>Last Updated: March 6, 2026</p>
+    </div>
+
+    <div class="legal-content">
+      <section>
+        <h2>1. Introduction</h2>
+        <p>Welcome to <strong>CODEKARX 2026</strong>, organized by <strong>UNAI TECH</strong>. Your privacy is critical to us. This policy explains how we collect, use, and safeguard your data when you register for our hackathon.</p>
+      </section>
+
+      <section>
+        <h2>2. Data We Collect</h2>
+        <p>When you register for CODEKARX 2026, we collect the following information:</p>
+        <ul>
+          <li><strong>Personal Details:</strong> Name, Email Address, Phone Number.</li>
+          <li><strong>Academic Details:</strong> College Name, Department, Year of Study.</li>
+          <li><strong>Project Details:</strong> Chosen Track, Project Team Name, Project Title/Idea.</li>
+          <li><strong>Authentication Data:</strong> Google Profile information (via Supabase Auth).</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>3. How We Use Your Data</h2>
+        <p>Your data is used for the following purposes:</p>
+        <ul>
+          <li>To process your registration and verify eligibility.</li>
+          <li>To communicate event updates, schedules, and logistics.</li>
+          <li>To issue participation certificates and award prizes.</li>
+          <li>To facilitate team formation and project tracking.</li>
+          <li>To improve our future events and organization services.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>4. Payment Processing</h2>
+        <p>Payments are processed securely via <strong>Zoho Payments</strong>. We do not store your credit card or bank details on our servers. Zoho collects and processes your payment information in accordance with their own privacy standards.</p>
+      </section>
+
+      <section>
+        <h2>5. Data Sharing & Disclosure</h2>
+        <p>We do not sell your data. We may share limited information with:</p>
+        <ul>
+          <li><strong>Sponsors:</strong> Only if you explicitly opt-in to hear from them regarding recruitment or tools.</li>
+          <li><strong>Service Providers:</strong> Supabase (Backend/Auth), Zoho (Payments), and WhatsApp (Communication).</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>6. Data Security</h2>
+        <p>We implement industry-standard security measures to protect your personal information from unauthorized access, alteration, or disclosure.</p>
+      </section>
+
+      <section>
+        <h2>7. Your Rights</h2>
+        <p>You have the right to access, update, or request the deletion of your personal data. For any such requests, please contact us at <strong>contact@unaitech.com</strong>.</p>
+      </section>
+    </div>
+
+    <div class="legal-footer">
+      <a href="/" class="back-home">← Back to Home</a>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .legal-container {
+    max-width: 900px;
+    margin: 120px auto 80px;
+    padding: 0 24px;
+    font-family: 'Outfit', sans-serif;
+    line-height: 1.7;
+    color: #334155;
+  }
+
+  .legal-header {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+
+  .legal-header h1 {
+    font-size: 3rem;
+    font-weight: 800;
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #1e293b, #4f46e5);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .legal-header p {
+    color: #64748b;
+    font-size: 1rem;
+  }
+
+  .legal-content section {
+    margin-bottom: 2.5rem;
+    background: white;
+    padding: 2rem;
+    border-radius: 1.5rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+    border: 1px solid #f1f5f9;
+  }
+
+  .legal-content h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .legal-content h2::before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 1.5rem;
+    background: #4f46e5;
+    border-radius: 99px;
+  }
+
+  .legal-content ul {
+    margin-top: 1rem;
+    padding-left: 1.5rem;
+  }
+
+  .legal-content li {
+    margin-bottom: 0.5rem;
+    position: relative;
+  }
+
+  .legal-footer {
+    text-align: center;
+    margin-top: 4rem;
+  }
+
+  .back-home {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    background: #f1f5f9;
+    color: #475569;
+    text-decoration: none;
+    border-radius: 99px;
+    font-weight: 600;
+    transition: all 0.2s;
+  }
+
+  .back-home:hover {
+    background: #e2e8f0;
+    color: #1e293b;
+    transform: translateX(-5px);
+  }
+
+  @media (max-width: 640px) {
+    .legal-header h1 { font-size: 2.25rem; }
+    .legal-container { margin-top: 100px; }
+    .legal-content section { padding: 1.5rem; }
+  }
+</style>

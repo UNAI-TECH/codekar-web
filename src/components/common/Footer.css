@@ -115,6 +115,27 @@ footer {
     font-weight: 500;
 }
 
+.footer-legal-links {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+}
+
+.footer-legal-links a {
+    color: #94a3b8;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.footer-legal-links a:hover {
+    color: #818cf8;
+}
+
+.legal-divider {
+    color: #475569;
+}
+
 @media (max-width: 768px) {
     footer {
         padding: 2rem 0 0;

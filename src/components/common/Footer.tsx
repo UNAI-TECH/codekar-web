@@ -79,6 +79,11 @@ const Footer: React.FC = () => {
             <div className="footer-bottom">
                 <div className="container">
                     <p>&copy; {year} UNAI. All rights reserved.</p>
+                    <div className="footer-legal-links">
+                        <a href="/privacy-policy">Privacy Policy</a>
+                        <span className="legal-divider">|</span>
+                        <a href="/terms-and-conditions">Terms & Conditions</a>
+                    </div>
                     <p className="unai-credit">UNAI Curated</p>
                 </div>
             </div>
