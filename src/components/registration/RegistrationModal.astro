@@ -2,7 +2,7 @@
 const TEAM_AMOUNT = import.meta.env.TEAM_REGISTRATION_AMOUNT || 999;
 const INDIVIDUAL_AMOUNT = import.meta.env.INDIVIDUAL_REGISTRATION_AMOUNT || 299;
 const ZOHO_ACCOUNT_ID = import.meta.env.PUBLIC_ZOHO_PAYMENTS_ACCOUNT_ID || '60064885871';
-const ZOHO_API_KEY_VAL = import.meta.env.PUBLIC_ZOHO_PAYMENTS_API_KEY || '';
+const ZOHO_API_KEY_VAL = import.meta.env.PUBLIC_ZOHO_PAYMENTS_API_KEY || '1003.62fb0a871087635784042d0400d3e25a.09ccf657aa5c7cd6719e98b4028c220d';
 ---
 <div id="registration-modal" class="modal" aria-hidden="true" data-open="false" 
      data-team-amount={TEAM_AMOUNT} 
@@ -556,6 +556,7 @@ const ZOHO_API_KEY_VAL = import.meta.env.PUBLIC_ZOHO_PAYMENTS_API_KEY || '';
         console.log('[ZOHO][WIDGET][INIT]', {
           account_id: modal?.dataset.accountId,
           domain: 'IN',
+          api_key_last_4: ZOHO_API_KEY ? ZOHO_API_KEY.slice(-4) : 'NONE',
           has_api_key: !!ZOHO_API_KEY
         });
 
