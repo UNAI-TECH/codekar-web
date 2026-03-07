@@ -21,7 +21,7 @@ const PrizeCard: React.FC<PrizeCardProps> = ({ place, rank, amount, perks, type,
     return (
         <div className={cardClass} data-place={place}>
             <div className={glowClass}></div>
-            {type === 'gold' && <div className="winner-crown">👑</div>}
+
             <div className="medal-wrapper">
                 <div className={medalClass}>
                     <div className="medal-laurel">

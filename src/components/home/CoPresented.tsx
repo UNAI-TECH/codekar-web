@@ -10,9 +10,32 @@ const CoPresented: React.FC = () => {
                     <h2 className="section-title">Co - Presented by </h2>
                 </div>
 
-                <div className="co-presenter-content">
-                    <div className="logo-wrapper">
-                        <img src="/logo.png" alt="Co-Presenter Logo" className="co-presenter-logo" />
+                <div className="logo-slider">
+                    <div className="logo-track">
+                        <div className="logo-slide">
+                            <img src="/3.png" alt="Co-Presenter Logo 2" className="co-presenter-logo" />
+                        </div>
+                        <div className="logo-slide">
+                            <img src="/2.png" alt="Co-Presenter Logo 3" className="co-presenter-logo" />
+                        </div>
+                        <div className="logo-slide">
+                            <img src="/3.png" alt="Co-Presenter Logo 2" className="co-presenter-logo" />
+                        </div>
+                        <div className="logo-slide">
+                            <img src="/2.png" alt="Co-Presenter Logo 3" className="co-presenter-logo" />
+                        </div>
+                        <div className="logo-slide">
+                            <img src="/3.png" alt="Co-Presenter Logo 2" className="co-presenter-logo" />
+                        </div>
+                        <div className="logo-slide">
+                            <img src="/2.png" alt="Co-Presenter Logo 3" className="co-presenter-logo" />
+                        </div>
+                        <div className="logo-slide">
+                            <img src="/3.png" alt="Co-Presenter Logo 2" className="co-presenter-logo" />
+                        </div>
+                        <div className="logo-slide">
+                            <img src="/2.png" alt="Co-Presenter Logo 3" className="co-presenter-logo" />
+                        </div>
                     </div>
                 </div>
             </div>

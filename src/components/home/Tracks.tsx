@@ -12,52 +12,88 @@ interface Track {
 
 const tracks: Track[] = [
     {
-        title: "Education",
-        description: "Revolutionize learning with ed-tech tools, LMS innovations, and accessible knowledge platforms.",
-        icon: "/Gemini_Generated_Image_gzmwk6gzmwk6gzmw.png",
-        extendedDesc: "Transform the way people learn and teach. Build platforms that make education accessible, engaging, and effective for everyone.",
-        examples: ["AI-powered tutoring systems", "Interactive learning platforms", "Virtual classrooms", "Gamified education apps"],
-        technologies: ["React", "Python", "TensorFlow", "WebRTC"]
-    },
-    {
-        title: "Entertainment",
-        description: "Build immersive experiences, gaming solutions, or content streaming innovations.",
-        icon: "/Gemini_Generated_Image_mstg9gmstg9gmstg.png",
-        extendedDesc: "Create the next generation of entertainment. From gaming to streaming, build experiences that captivate and engage audiences worldwide.",
-        examples: ["Multiplayer gaming platforms", "Streaming services", "AR/VR experiences", "Content recommendation engines"],
-        technologies: ["Unity", "WebGL", "Node.js", "AWS Media Services"]
-    },
-    {
-        title: "AI Agents & Automations",
-        description: "Develop intelligent agents that automate workflows and solve complex tasks autonomously.",
-        icon: "/Gemini_Generated_Image_rgmtbergmtbergmt.png",
-        extendedDesc: "Build autonomous systems that can think, learn, and act. Create intelligent agents that transform how work gets done.",
-        examples: ["Chatbots & virtual assistants", "Workflow automation tools", "Smart email assistants", "Code generation agents"],
-        technologies: ["LangChain", "OpenAI API", "Python", "AutoGen"]
-    },
-    {
-        title: "Core AI & ML",
-        description: "Push boundaries with Deep Learning, NLP, Computer Vision, and predictive models.",
+        title: "T01 – Core AI / ML",
+        description: "Push the limits of AI with Deep Learning, NLP, Computer Vision, and predictive models.",
         icon: "/Gemini_Generated_Image_t2c0vht2c0vht2c0.png",
-        extendedDesc: "Dive deep into machine learning and artificial intelligence. Build models that can see, understand, and predict.",
-        examples: ["Image recognition systems", "Natural language processors", "Predictive analytics", "Recommendation systems"],
-        technologies: ["PyTorch", "TensorFlow", "scikit-learn", "Hugging Face"]
+        extendedDesc: "Build intelligent systems that can understand and process low-resource Indian languages. Focus on AI that captures grammar, context, and conversation to enable smarter communication and accessibility.",
+        examples: [
+            "Language understanding models",
+            "AI chatbots & conversational agents",
+            "Speech recognition systems",
+            "AI translation tools",
+            "Smart recommendation systems"
+        ],
+        technologies: ["PyTorch", "TensorFlow", "Hugging Face", "Scikit-learn", "Transformers", "NLP Tools"]
     },
     {
-        title: "Big Data & Mass Communication",
-        description: "Harness data at scale for insights, journalism, or social connection platforms.",
+        title: "T02 – Education 3.0",
+        description: "Reimagine learning with AI-powered, personalized, and immersive education experiences.",
+        icon: "/Gemini_Generated_Image_gzmwk6gzmwk6gzmw.png",
+        extendedDesc: "Create the next generation of learning platforms using AI, gamification, and AR/VR. Build systems that adapt to each learner’s pace and deliver smart tutoring and interactive learning environments.",
+        examples: [
+            "AI personalized learning platforms",
+            "Smart tutoring assistants",
+            "Gamified learning apps",
+            "AR/VR education experiences",
+            "Adaptive testing systems"
+        ],
+        technologies: ["AI/ML", "AR/VR", "Web Apps", "Mobile Apps", "Learning Analytics", "NLP"]
+    },
+    {
+        title: "T03 – Entertainment & Media",
+        description: "Build the future of trusted digital media and AI-powered content platforms.",
+        icon: "/Gemini_Generated_Image_mstg9gmstg9gmstg.png",
+        extendedDesc: "Design solutions that help verify human vs AI-generated content, improve media authenticity, and deliver the right content to the right audience with transparency and trust.",
+        examples: [
+            "AI content detection tools",
+            "Media recommendation systems",
+            "Deepfake detection platforms",
+            "Smart content moderation tools",
+            "AI-powered creative platforms"
+        ],
+        technologies: ["AI/ML", "Computer Vision", "NLP", "Recommendation Systems", "Media APIs"]
+    },
+    {
+        title: "T04 – AI Agents & Automation",
+        description: "Automate entire workflows using intelligent AI agents and autonomous systems.",
+        icon: "/Gemini_Generated_Image_rgmtbergmtbergmt.png",
+        extendedDesc: "Build AI-powered agents that can perform tasks, make decisions, and manage business workflows automatically. Think of systems that reduce manual work and improve productivity.",
+        examples: [
+            "Autonomous AI agents",
+            "Business process automation tools",
+            "AI customer support assistants",
+            "Smart workflow orchestration systems",
+            "Task automation platforms"
+        ],
+        technologies: ["LangChain", "OpenAI APIs", "Automation Tools", "Python", "AI Agent Frameworks"]
+    },
+    {
+        title: "T05 – Mass Communication & Big Data",
+        description: "Reach millions with scalable communication platforms powered by data intelligence.",
         icon: "/Gemini_Generated_Image_v8yrntv8yrntv8yr.png",
-        extendedDesc: "Process and analyze massive datasets to uncover insights. Build platforms that connect people and disseminate information at scale.",
-        examples: ["Data visualization dashboards", "Real-time analytics platforms", "Social media tools", "News aggregators"],
-        technologies: ["Apache Spark", "Kafka", "PostgreSQL", "D3.js"]
+        extendedDesc: "Develop platforms that enable large-scale communication, lead verification, and campaign optimization using big data analytics and intelligent automation.",
+        examples: [
+            "Mass messaging platforms",
+            "Lead verification systems",
+            "Data-driven campaign tools",
+            "Customer engagement analytics",
+            "Large-scale notification systems"
+        ],
+        technologies: ["Big Data Tools", "Cloud Platforms", "Data Analytics", "APIs", "AI/ML"]
     },
     {
-        title: "Cutting-edge Agents",
-        description: "Experimental agentic workflows next-gen autonomous systems.",
+        title: "T06 – Cutting Edge Tech",
+        description: "Explore breakthrough innovations in Blockchain and AgriTech solutions.",
         icon: "/Gemini_Generated_Image_wg6h6swg6h6swg6h.png",
-        extendedDesc: "Pioneer the future of autonomous systems. Experiment with cutting-edge technologies and build the next generation of intelligent agents.",
-        examples: ["Multi-agent systems", "Autonomous research assistants", "Complex task planners", "Self-improving agents"],
-        technologies: ["CrewAI", "LangGraph", "Vector DBs", "Reinforcement Learning"]
+        extendedDesc: "Create impactful technologies that improve data transparency, security, and agricultural automation. Focus on solutions that bring real-world innovation to emerging industries.",
+        examples: [
+            "Blockchain transparency platforms",
+            "Secure digital record systems",
+            "Smart farming solutions",
+            "Agriculture automation tools",
+            "Supply chain tracking systems"
+        ],
+        technologies: ["Blockchain", "IoT", "Smart Contracts", "Data Platforms", "Automation Tools"]
     }
 ];
 
