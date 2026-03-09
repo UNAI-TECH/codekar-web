@@ -117,7 +117,7 @@ const Header: React.FC<HeaderProps> = ({ hideCTA = false }) => {
         { name: 'Tracks', href: '/#tracks' },
         { name: 'About', href: '/#about' },
         { name: 'Sponsors', href: '/#sponsors' },
-        { name: 'FAQ', href: '/#faq' },
+        { name: 'Docs', href: '/#docs' },
     ];
 
     return (

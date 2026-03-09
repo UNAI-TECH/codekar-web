@@ -43,7 +43,7 @@ const Footer: React.FC = () => {
                         <li><a href="/#tracks">Tracks</a></li>
                         <li><a href="/#prizes">Prizes</a></li>
                         <li><a href="/#sponsors">Sponsors</a></li>
-                        <li><a href="/#faq">FAQ</a></li>
+                        <li><a href="/#docs">Docs</a></li>
                     </ul>
                 </div>
 
