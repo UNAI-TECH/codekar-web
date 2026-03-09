@@ -68,8 +68,8 @@ async function createPaymentLink(params: {
         throw new Error("ZOHO_PAYMENTS_ACCOUNT_ID is required for link generation.");
     }
 
-    const returnUrl = `https://www.codekar.in/payment-success?registration_id=${params.registrationId}`;
-    const apiUrl = `https://payments.zoho.${domain}/api/v1/paymentlinks?account_id=${accountId}`;
+    const returnUrl = `https://www.codekarx.in/payment-success?registration_id=${params.registrationId}`;
+    const apiUrl = `https://payments.zoho.${domain.toLowerCase()}/api/v1/paymentlinks?account_id=${accountId}`;
 
     const payload = {
         amount: Number(params.amount).toFixed(2),

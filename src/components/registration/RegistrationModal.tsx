@@ -214,24 +214,31 @@ const RegistrationModal: React.FC<Props> = ({
         setIsLoading(true);
 
         const amount = registrationType === 'team' ? teamAmount : individualAmount;
-        console.log('[DEBUG][REACT] handlePayNow - Amount:', amount);
+        console.log('[DEBUG][REACT] Starting handlePayNow', {
+            amount,
+            paymentSessionId,
+            zohoAccountId,
+            zohoApiKeyLength: zohoApiKey?.length
+        });
 
         try {
             // @ts-ignore
             const instance = new window.ZPayments({
                 account_id: zohoAccountId,
-                domain: 'IN',
+                domain: 'in', // Use lowercase as per API standards
                 otherOptions: { api_key: zohoApiKey }
             });
+
+            console.log('[DEBUG][REACT] ZPayments instance created successfully');
 
             const options = {
                 amount: amount.toString(),
                 currency_code: 'INR',
                 currency_symbol: '₹',
                 payment_session_id: paymentSessionId,
-                payments_session_id: paymentSessionId,
+                payments_session_id: paymentSessionId, // SDK sometimes expects this name
                 business: 'CODEKARX',
-                description: `CodeKar 2026 Registration - ${registrationId}`,
+                description: `CodeKarX 2026 Registration - ${registrationId}`,
                 reference_number: registrationId,
                 address: {
                     name: formData.name,
@@ -240,22 +247,27 @@ const RegistrationModal: React.FC<Props> = ({
                 }
             };
 
+            console.log('[DEBUG][REACT] Requesting payment method with options:', options);
+
             try {
                 // @ts-ignore
                 await instance.requestPaymentMethod(options);
+                console.log('[DEBUG][REACT] Payment method request completed');
                 setPaymentState('success');
                 window.location.href = `/payment-success?registration_id=${registrationId}`;
             } catch (err: any) {
+                console.error('[DEBUG][REACT] requestPaymentMethod Error:', err);
                 if (err.code !== 'widget_closed') {
-                    setErrorMessage(err.message || 'Payment failed.');
+                    setErrorMessage(`Payment Error: ${err.message || 'Payment failed.'} (Code: ${err.code || 'unknown'})`);
                     setPaymentState('error');
                 }
             } finally {
                 // @ts-ignore
-                await instance.close();
+                try { await instance.close(); } catch (e) { }
             }
-        } catch (err) {
-            setErrorMessage('Failed to initialize payment widget.');
+        } catch (err: any) {
+            console.error('[DEBUG][REACT] ZPayments Initialization Error:', err);
+            setErrorMessage(`Initialization Error: ${err.message || 'Failed to initialize payment widget.'}`);
             setPaymentState('error');
         } finally {
             setIsLoading(false);
