@@ -415,3 +415,49 @@
         height: 36px;
     }
 }
+
+.register-cta-btn {
+    width: 100%;
+    padding: 1.25rem;
+    background: var(--color-s-primary);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1.25rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    margin-top: 1rem;
+    box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+.register-cta-btn:hover {
+    background: var(--color-s-primary-dark);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 20px -5px rgba(37, 99, 235, 0.4);
+}
+
+.register-cta-btn:active {
+    transform: translateY(-2px);
+}
+
+.register-cta-btn svg {
+    transition: transform 0.3s ease;
+}
+
+.register-cta-btn:hover svg {
+    transform: translateX(5px);
+}
+
+@media (max-width: 640px) {
+    .register-cta-btn {
+        padding: 1rem;
+        font-size: 1.1rem;
+    }
+}
