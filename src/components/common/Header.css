@@ -34,7 +34,7 @@ header.scrolled {
 }
 
 .logo-img {
-    height: clamp(2.5rem, 8vw, 3.5rem);
+    height: clamp(3.5rem, 12vw, 5rem);
     width: auto;
     object-fit: contain;
     transition: transform 0.3s ease, filter 0.3s ease;
@@ -290,7 +290,7 @@ nav a.active {
 /* Small Mobile Adjustments */
 @media (max-width: 360px) {
     .logo a {
-        font-size: 1.1rem;
+        font-size: 1rem;
     }
 
     .cta-button {

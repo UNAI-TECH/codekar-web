@@ -126,7 +126,7 @@ const Header: React.FC<HeaderProps> = ({ hideCTA = false }) => {
                 <div className="container header-content">
                     <div className="logo">
                         <a href="/">
-                            <img src="/codekarX.png" alt="CODEKARX" className="logo-img" />
+                            <img src="/codekarx png.png" alt="CODEKARX" className="logo-img" />
                         </a>
                     </div>
 
