@@ -53,11 +53,15 @@ const Header: React.FC<HeaderProps> = ({ hideCTA = false }) => {
     const closeMobileNav = useCallback(() => {
         setIsMenuOpen(false);
         document.body.classList.remove('scroll-locked');
+        // @ts-ignore
+        if (window.lenis) window.lenis.start();
     }, []);
 
     const openMobileNav = () => {
         setIsMenuOpen(true);
         document.body.classList.add('scroll-locked');
+        // @ts-ignore
+        if (window.lenis) window.lenis.stop();
     };
 
     const toggleMobileNav = () => {
@@ -65,39 +69,56 @@ const Header: React.FC<HeaderProps> = ({ hideCTA = false }) => {
         else openMobileNav();
     };
 
-    const smoothScrollTo = (hash: string) => {
-        const targetId = hash.replace('#', '');
-        const targetEl = document.getElementById(targetId);
-        if (!targetEl) return false;
-
+    const scrollToSection = (sectionId: string) => {
+        // Ensure Lenis is started before scrolling
         // @ts-ignore
         const lenis = window.lenis;
-        if (lenis) {
-            lenis.scrollTo(targetEl, { offset: -80 });
-        } else {
-            targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (lenis) lenis.start();
+
+        // Special case for Home to ensure it goes to the very top
+        if (sectionId === 'home') {
+            if (lenis) {
+                lenis.scrollTo(0, { duration: 1.2 });
+            } else {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+            setActiveHash('#home');
+            return;
         }
 
-        history.pushState(null, '', hash);
-        setActiveHash(hash);
-        return true;
+        const element = document.getElementById(sectionId);
+        if (!element) return;
+
+        const offset = 80; // navbar height
+
+        if (lenis) {
+            // Let lenis handle the calculation for better reliability with its own easing
+            lenis.scrollTo(element, { offset: -offset, duration: 1.2 });
+        } else {
+            const bodyRect = document.body.getBoundingClientRect().top;
+            const elementRect = element.getBoundingClientRect().top;
+            const elementPosition = elementRect - bodyRect;
+            const offsetPosition = elementPosition - offset;
+
+            window.scrollTo({
+                top: offsetPosition,
+                behavior: "smooth"
+            });
+        }
+
+        setActiveHash(`#${sectionId}`);
     };
 
-    const handleNavLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
-        const hash = href.includes('#') ? '#' + href.split('#')[1] : '';
-        const isHomePage = window.location.pathname === '/' ||
-            window.location.pathname === '/index.html' ||
-            window.location.pathname.endsWith('/');
-
+    const handleNavLinkClick = (sectionId: string) => {
         closeMobileNav();
 
-        if (isHomePage && hash && hash !== '#') {
-            const targetEl = document.querySelector(hash);
-            if (targetEl) {
-                e.preventDefault();
-                smoothScrollTo(hash);
-            }
-        }
+        // Increase timeout to 400ms to allow mobile menu (300ms transition)
+        // to fully close and layout to stabilize before scrolling
+        requestAnimationFrame(() => {
+            setTimeout(() => {
+                scrollToSection(sectionId);
+            }, 400);
+        });
     };
 
     const handleApplyClick = () => {
@@ -113,11 +134,10 @@ const Header: React.FC<HeaderProps> = ({ hideCTA = false }) => {
     }, [closeMobileNav]);
 
     const navLinks = [
-        { name: 'Home', href: '/home' },
-        { name: 'Tracks', href: '/#tracks' },
-        { name: 'About', href: '/#about' },
-        { name: 'Sponsors', href: '/#sponsors' },
-        { name: 'Docs', href: '/#docs' },
+        { name: 'Home', section: 'home' },
+        { name: 'Tracks', section: 'tracks' },
+        { name: 'About', section: 'about' },
+        { name: 'Docs', section: 'docs' },
     ];
 
     return (
@@ -145,14 +165,13 @@ const Header: React.FC<HeaderProps> = ({ hideCTA = false }) => {
                     <nav id="nav-menu" className={isMenuOpen ? 'open' : ''}>
                         <ul>
                             {navLinks.map((link) => (
-                                <li key={link.href}>
-                                    <a
-                                        href={link.href}
-                                        className={`nav-link ${activeHash === (link.href.includes('#') ? '#' + link.href.split('#')[1] : '') ? 'active' : ''}`}
-                                        onClick={(e) => handleNavLinkClick(e, link.href)}
+                                <li key={link.section}>
+                                    <button
+                                        className={`nav-link ${activeHash === `#${link.section}` ? 'active' : ''}`}
+                                        onClick={() => handleNavLinkClick(link.section)}
                                     >
                                         {link.name}
-                                    </a>
+                                    </button>
                                 </li>
                             ))}
                         </ul>

@@ -146,7 +146,8 @@ nav ul {
     width: 100%;
 }
 
-nav a {
+nav a,
+nav button.nav-link {
     display: flex;
     align-items: center;
     padding: 0.75rem 1rem;
@@ -156,14 +157,23 @@ nav a {
     border-radius: 0.75rem;
     min-height: 44px;
     transition: all 0.2s ease;
+    background: none;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+    font: inherit;
+    text-decoration: none;
 }
 
-nav a:hover {
+nav a:hover,
+nav button.nav-link:hover {
     background: rgba(73, 118, 159, 0.1);
     color: var(--color-s-primary);
 }
 
-nav a.active {
+nav a.active,
+nav button.nav-link.active {
     color: var(--color-s-primary);
     background: rgba(73, 118, 159, 0.05);
 }
@@ -263,19 +273,23 @@ nav a.active {
         align-items: center;
     }
 
-    nav a {
+    nav a,
+    nav button.nav-link {
         font-size: 0.95rem;
         padding: 0.5rem 1rem;
         border-radius: 9999px;
         justify-content: center;
+        width: auto; /* Buttons shouldn't be full width on desktop */
     }
 
-    nav a:hover {
+    nav a:hover,
+    nav button.nav-link:hover {
         background: var(--color-s-primary);
         color: #ffffff;
     }
 
-    nav a.active {
+    nav a.active,
+    nav button.nav-link.active {
         color: var(--color-s-primary);
         background: rgba(73, 118, 159, 0.05);
         border-radius: 9999px;
