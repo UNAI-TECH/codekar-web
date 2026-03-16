@@ -3,6 +3,13 @@ import './DockNav.css';
 
 const DockNav: React.FC = () => {
     const scrollToSection = (sectionId: string) => {
+        const isHomePage = window.location.pathname === '/';
+
+        if (!isHomePage) {
+            window.location.href = `/#${sectionId}`;
+            return;
+        }
+
         if (sectionId === 'home') {
             // @ts-ignore
             const lenis = window.lenis;

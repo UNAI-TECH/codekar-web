@@ -39,12 +39,26 @@ const Header: React.FC<HeaderProps> = ({ hideCTA = false }) => {
         }
     }, []);
 
-    // Handle Hash/Active Link
+    // Handle Hash/Active Link & Mount Scroll
     useEffect(() => {
         const handleHashChange = () => {
-            setActiveHash(window.location.hash);
+            const hash = window.location.hash;
+            setActiveHash(hash);
+            if (hash && window.location.pathname === '/') {
+                scrollToSection(hash.replace('#', ''));
+            }
         };
+
         window.addEventListener('hashchange', handleHashChange);
+        
+        // Handle mount scroll if landing on home with a hash
+        if (window.location.hash && window.location.pathname === '/') {
+            // Short delay to ensure sections are rendered and stable
+            setTimeout(() => {
+                scrollToSection(window.location.hash.replace('#', ''));
+            }, 500);
+        }
+
         handleHashChange(); // Initial check
 
         return () => window.removeEventListener('hashchange', handleHashChange);
@@ -110,15 +124,20 @@ const Header: React.FC<HeaderProps> = ({ hideCTA = false }) => {
     };
 
     const handleNavLinkClick = (sectionId: string) => {
-        closeMobileNav();
+        const isHomePage = window.location.pathname === '/';
 
-        // Increase timeout to 400ms to allow mobile menu (300ms transition)
-        // to fully close and layout to stabilize before scrolling
-        requestAnimationFrame(() => {
-            setTimeout(() => {
-                scrollToSection(sectionId);
-            }, 400);
-        });
+        if (isHomePage) {
+            closeMobileNav();
+            // Increase timeout to 400ms for mobile reliability
+            requestAnimationFrame(() => {
+                setTimeout(() => {
+                    scrollToSection(sectionId);
+                }, 400);
+            });
+        } else {
+            // If on external page, navigate to home with hash
+            window.location.href = `/#${sectionId}`;
+        }
     };
 
     const handleApplyClick = () => {
